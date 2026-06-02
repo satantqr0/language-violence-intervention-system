@@ -47,11 +47,45 @@
 | Mac Mini M1/M2 | 8GB+ RAM | ✅ 完美支持 |
 | 通用 x86_64 PC | 8GB+ RAM | ✅ 支持 |
 
-### 音频设备
+### 采音设备
 
 - **USB 麦克风阵列**: ReSpeaker 4-Mic (推荐)
 - **USB 单麦**: 任意 16kHz 采样率麦克风
 - **3.5mm 麦克风**: 需外接声卡
+
+### 发声单元
+
+发声单元用于播放系统生成的干预提示音，是“主动干预”链路的关键硬件。没有扬声器时，系统仍可完成检测、记录和 Web 告警，但无法在现场即时播放语音提醒。
+
+推荐配置：
+
+| 发声单元 | 说明 | 适用情况 |
+|----------|------|----------|
+| USB 小音箱 | 推荐方案，树莓派可直接识别为 USB Audio 设备 | 独立部署、桌面/客厅场景 |
+| USB 声卡 + 有源音箱 | 适合需要更大音量或更稳定输出的场景 | 房间较大、需要外接功放 |
+| HDMI 显示器/电视扬声器 | 通过 HDMI 输出声音 | 设备连接显示器或电视时 |
+| 蓝牙音箱 | 可用但不推荐作为首选 | 对延迟和断连不敏感的测试场景 |
+
+树莓派 5 没有原生 3.5mm 模拟音频口；如果需要接传统有源音箱，建议使用 USB 声卡、USB 音箱或带音频输出的扩展板。麦克风阵列本身即使暴露播放设备，也不建议作为主要发声单元，因为音量、音质和回声控制通常不如独立音箱。
+
+部署建议：
+
+- 将发声单元与麦克风保持一定距离，避免正对麦克风，减少回声和啸叫。
+- 音量以“现场能听清提醒、但不会压过正常谈话”为宜。
+- 如果启用电视/歌曲声音过滤，应在发声单元和麦克风位置固定后再做校准。
+- 儿童保护或夜间场景可使用较柔和音量，避免提示音本身造成惊吓。
+
+系统会自动选择可用播放设备，也可通过 `.env` 指定输出设备：
+
+```bash
+# 查看 ALSA 播放设备
+aplay -l
+
+# 示例：指定 USB 音箱或 USB 声卡
+VD_AUDIO_OUTPUT_DEVICE=plughw:CARD=Device,DEV=0
+```
+
+播放链路优先级为：显式配置的 `VD_AUDIO_OUTPUT_DEVICE`、系统可用的 PulseAudio/PipeWire 输出、USB/非 HDMI ALSA 播放设备、系统默认播放设备。可使用 `scripts/audio_diagnose.sh` 检查音箱识别、音量、播放后端和测试音输出。
 
 ## 快速安装
 
@@ -166,7 +200,7 @@ VD_WEB_USERNAME=pi
 VD_WEB_PASSWORD=请设置独立强密码
 VD_AUDIO_DIR=/home/pi/language-violence-intervention-system/audio
 VD_DATA_DIR=/home/pi/language-violence-intervention-system/data
-VD_AUDIO_OUTPUT_DEVICE=plughw:CARD=BR17,DEV=0
+VD_AUDIO_OUTPUT_DEVICE=plughw:CARD=Device,DEV=0
 SMB_USER=
 SMB_PASS=
 SMB_SHARE=
@@ -269,11 +303,14 @@ language-violence-intervention-system/
 
 ## 故障排除
 
-### 音频设备问题
+### 麦克风与发声单元问题
 
 ```bash
 # 列出可用音频设备
 python3 -c "import pyaudio; p = pyaudio.PyAudio(); [print(f'{i}: {p.get_device_info_by_index(i)[\"name\"]}') for i in range(p.get_device_count())]"
+
+# 列出可用播放设备
+aplay -l
 ```
 
 ### Whisper 模型下载失败
@@ -289,6 +326,18 @@ python3 -c "import whisper; whisper.download_model('base')"
 # 检查播放器
 which mpv
 which aplay
+
+# 生成测试音并播放
+python3 - <<'PY'
+import math, struct, wave
+with wave.open('/tmp/test_tone.wav', 'w') as f:
+    f.setnchannels(1)
+    f.setsampwidth(2)
+    f.setframerate(8000)
+    for i in range(8000):
+        f.writeframes(struct.pack('<h', int(12000 * math.sin(2 * math.pi * 440 * i / 8000))))
+PY
+aplay /tmp/test_tone.wav
 ```
 
 ## 许可证

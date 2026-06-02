@@ -13,14 +13,14 @@ from tts_engine import order_alsa_playback_devices
 APLAY_WITH_SPEAKER = """\
 card 0: vc4hdmi0 [vc4-hdmi-0], device 0: MAI PCM i2s-hifi-0 [MAI PCM i2s-hifi-0]
 card 2: ArrayUAC10 [ReSpeaker 4 Mic Array (UAC1.0)], device 0: USB Audio [USB Audio]
-card 3: BR17 [JieLi BR17], device 0: USB Audio [USB Audio]
+card 3: USBSpeaker [USB Speaker], device 0: USB Audio [USB Audio]
 """
 
 
 def test_usb_speaker_precedes_microphone_array():
     devices = order_alsa_playback_devices(APLAY_WITH_SPEAKER)
     assert devices == [
-        "plughw:CARD=BR17,DEV=0",
+        "plughw:CARD=USBSpeaker,DEV=0",
         "plughw:CARD=ArrayUAC10,DEV=0",
     ]
 
