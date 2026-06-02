@@ -7,8 +7,25 @@ Attribution notice:
 Redistributions must preserve this NOTICE file and the LICENSE file when the
 Apache License 2.0 requires preservation of notices.
 
+Trademark and project-name notice:
+The project name "语言暴力干预系统" and the name "Language Violence
+Intervention System" identify this project and its original source. The Apache
+License 2.0 does not grant permission to use the licensor's trade names,
+trademarks, service marks, or product names except as required for reasonable
+and customary attribution.
+
+Patent notice:
+The Apache License 2.0 includes the patent grant and patent-termination terms
+stated in Section 3 of the License. No patent rights are granted beyond the
+scope stated in the Apache License 2.0. Hardware designs, unpublished
+implementations, deployment data, voiceprint templates, recordings, logs,
+speaker profiles, screening records, trademarks, and service marks are not
+licensed by this NOTICE file.
+
 Safety notice:
 This software is not a medical device, diagnostic tool, legal evidence system,
 or emergency response substitute. Risk, profile, voiceprint, emotion, and
 mental-health screening outputs are assistive signals only and require human
 review.
+
+This NOTICE file is informational and does not modify the Apache License 2.0.

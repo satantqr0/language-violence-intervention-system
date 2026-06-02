@@ -366,7 +366,14 @@ aplay /tmp/test_tone.wav
 
 ## 许可证
 
-Apache License 2.0。请保留 `LICENSE` 与 `NOTICE` 文件中的 `satantqr0` 版权署名和免责声明。
+本项目代码以 Apache License 2.0 开源。请保留 `LICENSE` 与 `NOTICE` 文件中的 `satantqr0` 版权署名、项目来源、专利提示和免责声明。
+
+需要特别注意：
+
+- Apache License 2.0 允许使用、复制、修改、分发、再许可和商业使用，但必须遵守保留许可证、保留 NOTICE、标明修改等条件。
+- Apache License 2.0 不授予项目名、商标、服务标识或作者背书权；二次发布不得暗示由 `satantqr0` 官方认可。
+- Apache License 2.0 包含其第 3 节规定的专利授权和专利诉讼终止条款；仓库声明不额外授权硬件设计、未公开实现、部署数据、录音、声纹模板、人员画像、心理筛查记录或安全处置记录。
+- 第三方依赖、模型权重、云服务、语音服务和系统软件仍受各自许可证或服务条款约束，详见 `THIRD_PARTY_NOTICES.md`。
 
 另见 `LEGAL_NOTICE.md`：本项目不是医疗诊断、法律证据或紧急救援替代系统；涉及人员识别、画像和筛查时必须取得合法依据与必要同意。
 

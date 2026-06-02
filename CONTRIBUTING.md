@@ -7,6 +7,13 @@ or other contribution to this project, you agree that your contribution is
 licensed under the Apache License 2.0, unless you explicitly mark it as
 `Not a Contribution` before submission.
 
+Contributions are accepted under the inbound-equals-outbound model: accepted
+contributions are licensed to recipients under the same Apache License 2.0 terms
+as the project, including the patent grant and patent-termination terms stated
+in that license. You keep copyright in your own contribution, but you grant the
+project and downstream recipients the license rights needed to use, modify, and
+redistribute it under Apache License 2.0.
+
 Please only submit work that you have the right to license. Do not submit:
 
 - API keys, passwords, SSH keys, tokens, or private deployment details.
