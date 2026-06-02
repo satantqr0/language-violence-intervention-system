@@ -342,7 +342,7 @@ aplay /tmp/test_tone.wav
 
 ## 许可证
 
-Apache License 2.0。请保留 `LICENSE` 与 `NOTICE` 文件中的版权、署名、专利提示和免责声明。
+Apache License 2.0。请保留 `LICENSE` 与 `NOTICE` 文件中的 `satantqr0` 版权署名和免责声明。
 
 另见 `LEGAL_NOTICE.md`：本项目不是医疗诊断、法律证据或紧急救援替代系统；涉及人员识别、画像和筛查时必须取得合法依据与必要同意。
 

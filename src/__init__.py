@@ -5,4 +5,4 @@
 """
 
 __version__ = "1.0.0"
-__author__ = "Language Violence Intervention System Team"
+__author__ = "satantqr0"
