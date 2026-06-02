@@ -1,0 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+语言暴力干预系统
+端侧语音识别混合语义分析语言暴力检测与主动干预系统
+"""
+
+__version__ = "1.0.0"
+__author__ = "Language Violence Intervention System Team"

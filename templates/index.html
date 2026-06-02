@@ -1,0 +1,2743 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>语言暴力干预系统控制台</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7fb;
+      --surface: #ffffff;
+      --surface-2: #f9fafb;
+      --line: #d9e1ec;
+      --text: #172033;
+      --muted: #667085;
+      --green: #15803d;
+      --green-bg: #eaf7ee;
+      --red: #b42318;
+      --red-bg: #fff1f0;
+      --amber: #b7791f;
+      --amber-bg: #fff7e6;
+      --blue: #1d4ed8;
+      --blue-bg: #eaf1ff;
+      --teal: #0f766e;
+      --teal-bg: #e6f6f3;
+      --purple: #7c3aed;
+      --purple-bg: #f3effe;
+      --shadow: 0 10px 28px rgba(16, 24, 40, 0.07);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      letter-spacing: 0;
+    }
+    button, input, select, textarea { font: inherit; }
+    button { border: 0; cursor: pointer; }
+    button:disabled { cursor: not-allowed; opacity: 0.55; }
+    .app { min-height: 100vh; }
+
+    /* ── Topbar ── */
+    .topbar {
+      position: sticky; top: 0; z-index: 10;
+      background: rgba(245, 247, 251, 0.94);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+    }
+    .topbar-inner {
+      max-width: 1440px; margin: 0 auto; padding: 14px 20px;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    }
+    .brand { min-width: 220px; }
+    .brand-title { font-size: 20px; font-weight: 760; line-height: 1.25; }
+    .brand-subtitle { margin-top: 3px; font-size: 12px; color: var(--muted); }
+    .top-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .btn {
+      min-height: 38px; padding: 0 14px; border-radius: 7px;
+      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      font-weight: 700; color: var(--text); background: var(--surface);
+      border: 1px solid var(--line); white-space: nowrap;
+    }
+    .btn:hover { background: #f3f6fb; }
+    .btn-primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .btn-primary:hover { background: #1e40af; }
+    .btn-danger { background: var(--red); border-color: var(--red); color: #fff; }
+    .btn-danger:hover { background: #991b1b; }
+    .btn-green { background: var(--green); border-color: var(--green); color: #fff; }
+    .btn-green:hover { background: #166534; }
+    .btn-teal { background: var(--teal); border-color: var(--teal); color: #fff; }
+    .btn-teal:hover { background: #0d5e53; }
+    .btn-icon { width: 38px; padding: 0; }
+
+    /* ── Shell ── */
+    .shell {
+      max-width: 1440px; margin: 0 auto; padding: 20px;
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      gap: 18px;
+    }
+    .sidebar { display: grid; gap: 14px; align-content: start; }
+    .main { display: grid; gap: 18px; align-content: start; min-width: 0; }
+    .main > *, .grid-2 > * { min-width: 0; }
+    .panel, .metric, .event-card, .setting-card {
+      background: var(--surface); border: 1px solid var(--line);
+      border-radius: 8px; box-shadow: var(--shadow);
+    }
+    .panel { padding: 16px; }
+    .panel-header {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px;
+    }
+    .panel-title { font-size: 16px; font-weight: 760; }
+    .panel-note { font-size: 12px; color: var(--muted); }
+    .status-pill, .pill {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-height: 24px; padding: 0 9px; border-radius: 999px;
+      font-size: 12px; font-weight: 760; border: 1px solid transparent; white-space: nowrap;
+    }
+    .ok { color: var(--green); background: var(--green-bg); border-color: #b8e6c5; }
+    .warn { color: var(--amber); background: var(--amber-bg); border-color: #f3d28b; }
+    .bad { color: var(--red); background: var(--red-bg); border-color: #ffc9c3; }
+    .info { color: var(--blue); background: var(--blue-bg); border-color: #c6d8ff; }
+    .teal { color: var(--teal); background: var(--teal-bg); border-color: #bce8df; }
+    .purple { color: var(--purple); background: var(--purple-bg); border-color: #d8c2fc; }
+    .muted-pill { color: var(--muted); background: #f1f4f8; border-color: var(--line); }
+
+    /* ── Sidebar KV ── */
+    .device-list { display: grid; gap: 10px; }
+    .kv {
+      display: grid; grid-template-columns: minmax(76px, auto) minmax(0, 1fr);
+      gap: 8px; align-items: center; font-size: 13px;
+    }
+    .kv-label { color: var(--muted); }
+    .kv-value { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 650; }
+
+    /* ── Metrics ── */
+    .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    .metric { padding: 14px; min-height: 100px; }
+    .metric-label { color: var(--muted); font-size: 12px; }
+    .metric-value { font-size: 30px; font-weight: 800; line-height: 1.15; margin-top: 9px; }
+    .metric-foot { margin-top: 8px; color: var(--muted); font-size: 12px; }
+
+    /* ── Mode Grid ── */
+    .mode-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .mode-card {
+      border: 1px solid var(--line); border-radius: 8px; padding: 12px;
+      background: var(--surface-2); min-height: 94px;
+    }
+    .mode-name { font-size: 13px; color: var(--muted); }
+    .mode-value { margin-top: 8px; font-size: 16px; font-weight: 780; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mode-sub { margin-top: 8px; font-size: 12px; color: var(--muted); line-height: 1.35; }
+
+    /* ── Grid 2 ── */
+    .grid-2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+
+    /* ── Settings ── */
+    .settings-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .setting-card { padding: 14px; box-shadow: none; }
+    .setting-label { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+    .input, .select {
+      width: 100%; height: 38px; border: 1px solid var(--line); border-radius: 7px;
+      background: #fff; color: var(--text); padding: 0 10px; outline: none;
+    }
+    .input:focus, .select:focus { border-color: #93b4ff; box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.12); }
+    .slider { width: 100%; accent-color: var(--blue); }
+    .small-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+
+    /* ── Sensitivity Help ── */
+    .sensitivity-help {
+      display: inline-flex; align-items: center; cursor: help; color: var(--muted);
+      font-size: 12px; border-bottom: 1px dashed var(--muted);
+      position: relative;
+    }
+    .sensitivity-tooltip {
+      display: none; position: absolute; top: calc(100% + 6px); left: 0;
+      background: var(--text); color: #fff; border-radius: 8px; padding: 10px 12px;
+      font-size: 12px; line-height: 1.6; white-space: nowrap; z-index: 30;
+      box-shadow: var(--shadow);
+    }
+    .sensitivity-help:hover .sensitivity-tooltip { display: block; }
+
+    /* ── Tabs ── */
+    .tabs { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface-2); }
+    .tab {
+      min-height: 34px; padding: 0 12px; border-right: 1px solid var(--line);
+      background: transparent; font-weight: 700; color: var(--muted);
+    }
+    .tab:last-child { border-right: 0; }
+    .tab.active { background: #fff; color: var(--blue); }
+    .events-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+    /* ── Event List ── */
+    .event-list { display: grid; gap: 10px; max-height: 620px; overflow: auto; padding-right: 2px; }
+    .event-card { padding: 14px; box-shadow: none; border-left: 5px solid #b7c4d4; }
+    .event-card.violence { border-left-color: var(--red); background: #fffafa; }
+    .event-card.acoustic { border-left-color: var(--amber); }
+    .event-card.intervention { border-left-color: var(--teal); background: #f0fdf9; }
+    .event-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .event-time { color: var(--muted); font-size: 12px; }
+    .event-text { margin-top: 8px; line-height: 1.5; font-size: 15px; overflow-wrap: anywhere; }
+    .event-meta { margin-top: 10px; display: flex; gap: 7px; flex-wrap: wrap; }
+    .event-actions { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn-mini {
+      min-height: 30px; padding: 0 10px; border-radius: 7px; border: 1px solid var(--line);
+      background: #fff; color: var(--text); font-size: 12px; font-weight: 700;
+    }
+    .btn-mini:hover { background: #f3f6fb; }
+    .btn-mini.marked { border-color: var(--blue); background: var(--blue-bg); color: var(--blue); }
+
+    /* ── Compliance ── */
+    .compliance-list { display: grid; gap: 9px; }
+    .compliance-item {
+      display: grid; grid-template-columns: 26px minmax(0, 1fr) auto;
+      gap: 10px; align-items: start; padding: 10px;
+      border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2);
+    }
+    .compliance-icon { font-weight: 900; text-align: center; }
+    .compliance-title { font-weight: 730; font-size: 13px; }
+    .compliance-desc { color: var(--muted); font-size: 12px; margin-top: 3px; line-height: 1.4; }
+
+    /* ── Threshold ── */
+    .threshold-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; margin-top: 8px; }
+    .threshold-label { color: var(--muted); font-size: 13px; }
+    .threshold-value { font-weight: 760; }
+
+    /* ── Trend Chart ── */
+    .trend-chart-wrap { position: relative; height: 200px; }
+    .trend-chart-wrap canvas { width: 100% !important; height: 100% !important; }
+
+    /* ── Speaker Panel ── */
+    .speaker-list { display: grid; gap: 8px; max-height: 280px; overflow: auto; }
+    .speaker-item {
+      display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto;
+      gap: 8px; align-items: center; padding: 10px;
+      border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2);
+      font-size: 13px;
+    }
+    .speaker-avatar {
+      width: 34px; height: 34px; border-radius: 50%; background: var(--blue-bg);
+      color: var(--blue); font-weight: 800; font-size: 15px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .speaker-name { font-weight: 730; }
+    .speaker-count { color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .speaker-meta { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+    .profile-notice {
+      padding: 10px 12px; margin-bottom: 14px; border: 1px solid #f3d28b;
+      border-radius: 8px; color: var(--amber); background: var(--amber-bg);
+      font-size: 12px; line-height: 1.5;
+    }
+    .profile-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px; }
+    .profile-metric {
+      padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2);
+    }
+    .profile-metric-label { color: var(--muted); font-size: 11px; }
+    .profile-metric-value { font-size: 21px; font-weight: 780; margin-top: 5px; }
+    .profile-columns { display: grid; grid-template-columns: minmax(250px, 1fr) minmax(270px, 1fr); gap: 16px; }
+    .profile-section-title { font-size: 13px; font-weight: 760; margin-bottom: 8px; }
+    .profile-facts { display: grid; gap: 7px; font-size: 13px; margin-bottom: 14px; }
+    .profile-fact { display: flex; justify-content: space-between; gap: 10px; color: var(--muted); }
+    .profile-fact strong { color: var(--text); font-weight: 680; text-align: right; }
+    .observation-summary { font-size: 12px; color: var(--muted); line-height: 1.55; margin-bottom: 10px; }
+    .observation-grid { display: grid; gap: 7px; margin-bottom: 14px; }
+    .observation-item {
+      display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 5px 10px;
+      padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2);
+      font-size: 12px;
+    }
+    .observation-item strong { font-size: 12px; }
+    .observation-detail { grid-column: 1 / -1; color: var(--muted); line-height: 1.45; }
+    .profile-events { display: grid; gap: 6px; max-height: 155px; overflow-y: auto; }
+    .profile-event { font-size: 12px; border: 1px solid var(--line); border-radius: 7px; padding: 7px; background: var(--surface-2); }
+    .profile-form { display: grid; gap: 10px; }
+    .profile-form label { display: grid; gap: 5px; color: var(--muted); font-size: 12px; }
+    .profile-form textarea.input { height: 84px; padding: 9px 10px; resize: vertical; }
+    .voiceprint-box {
+      margin-top: 4px; padding: 12px; border: 1px solid var(--line); border-radius: 8px;
+      background: var(--surface-2); display: grid; gap: 9px;
+    }
+    .voiceprint-detail { font-size: 12px; line-height: 1.5; color: var(--muted); }
+    .consent-row {
+      display: flex !important; flex-direction: row; align-items: flex-start; gap: 7px !important;
+      color: var(--text) !important; line-height: 1.45;
+    }
+    .consent-row input { margin-top: 2px; accent-color: var(--teal); }
+    .screening-box {
+      margin-top: 4px; padding: 12px; border: 1px solid var(--line); border-radius: 8px;
+      background: var(--surface-2); display: grid; gap: 9px;
+    }
+    .screening-result { border: 1px solid var(--line); border-radius: 7px; padding: 8px; font-size: 12px; line-height: 1.5; }
+    .screening-form { display: grid; gap: 12px; }
+    .screening-question { display: grid; gap: 5px; font-size: 13px; }
+    .screening-question span { line-height: 1.5; }
+    .report-metrics { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+    .report-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .report-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+    .report-footer { margin-top: 10px; font-size: 11px; color: var(--muted); text-align: right; overflow-wrap: anywhere; }
+    .report-speaker-row { display: grid; grid-template-columns: minmax(88px, 120px) minmax(0, 1fr) 74px; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .report-speaker-bar { background: var(--surface-2); border-radius: 4px; height: 16px; overflow: hidden; }
+    .report-speaker-rate { font-size: 12px; font-weight: 700; white-space: nowrap; }
+
+    /* ── Intervention Log ── */
+    .int-list { display: grid; gap: 8px; max-height: 340px; overflow: auto; }
+    .int-item {
+      padding: 12px; border: 1px solid var(--line); border-radius: 8px;
+      background: var(--surface-2); border-left-width: 4px;
+    }
+    .int-item.high { border-left-color: var(--red); }
+    .int-item.medium { border-left-color: var(--amber); }
+    .int-item.low { border-left-color: var(--blue); }
+    .int-text { font-size: 13px; line-height: 1.5; margin: 6px 0; font-style: italic; color: var(--text); }
+    .int-intervention { font-size: 12px; color: var(--teal); margin-top: 6px; }
+    .safety-item { border-left-color: var(--red); }
+    .safety-item.closed { border-left-color: var(--green); }
+    .safety-trigger { margin-top: 6px; font-size: 12px; color: var(--red); font-weight: 700; }
+    .safety-form { display: grid; gap: 12px; }
+    .safety-form label { display: grid; gap: 5px; color: var(--muted); font-size: 12px; }
+    .safety-form textarea.input { height: 96px; padding: 9px 10px; resize: vertical; }
+
+    /* ── Sub-tabs ── */
+    .sub-tabs { display: flex; gap: 0; border-bottom: 2px solid var(--line); margin-bottom: 14px; }
+    .sub-tab {
+      padding: 8px 16px; font-size: 13px; font-weight: 700; color: var(--muted);
+      border-bottom: 2px solid transparent; margin-bottom: -2px; background: none; border-top: 0; border-left: 0; border-right: 0;
+      cursor: pointer;
+    }
+    .sub-tab:hover { color: var(--text); }
+    .sub-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+    /* ── Modal ── */
+    .empty { color: var(--muted); text-align: center; padding: 34px 10px; border: 1px dashed var(--line); border-radius: 8px; background: var(--surface-2); }
+    .toast {
+      position: fixed; right: 18px; bottom: 18px; max-width: min(420px, calc(100vw - 36px));
+      padding: 12px 14px; border-radius: 8px; background: #111827; color: #fff;
+      box-shadow: var(--shadow); opacity: 0; transform: translateY(8px);
+      pointer-events: none; transition: opacity .18s ease, transform .18s ease;
+      z-index: 50; font-size: 14px;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    /* ── Intervention Notification ── */
+    .int-notify {
+      position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+      max-width: 500px; width: calc(100vw - 32px);
+      background: var(--red-bg); border: 2px solid var(--red); border-radius: 12px;
+      padding: 16px 20px; z-index: 60;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      opacity: 0; pointer-events: none;
+      transition: opacity .3s ease, transform .3s ease;
+      transform: translateX(-50%) translateY(-20px);
+    }
+    .int-notify.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+    .int-notify-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .int-notify-icon { font-size: 24px; }
+    .int-notify-title { font-size: 16px; font-weight: 800; color: var(--red); }
+    .int-notify-text { font-size: 14px; color: var(--text); line-height: 1.5; margin: 8px 0; padding: 10px; background: #fff; border-radius: 8px; border: 1px solid var(--line); }
+    .int-notify-action { font-size: 13px; color: var(--muted); margin-top: 8px; }
+    .int-notify-close { background: var(--red); color: #fff; border: none; border-radius: 6px; padding: 4px 10px; font-size: 12px; font-weight: 700; cursor: pointer; margin-top: 8px; }
+    .int-notify-close:hover { background: #991b1b; }
+
+    /* ── Config Editor ── */
+    .config-editor { display: grid; gap: 12px; }
+    .config-row { display: grid; grid-template-columns: minmax(120px, auto) minmax(0, 1fr); gap: 8px; align-items: center; font-size: 13px; }
+    .config-row .input { height: 34px; }
+
+    dialog {
+      border: 0; border-radius: 10px; padding: 0;
+      box-shadow: 0 18px 60px rgba(0, 0, 0, .25);
+      max-width: 720px; width: calc(100vw - 32px);
+    }
+    dialog::backdrop { background: rgba(15, 23, 42, 0.45); }
+    .modal-head {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 16px; border-bottom: 1px solid var(--line);
+    }
+    .modal-body { padding: 16px; max-height: 70vh; overflow: auto; }
+    .modal-foot { padding: 12px 16px; border-top: 1px solid var(--line); display: flex; gap: 8px; justify-content: flex-end; }
+    pre.report { white-space: pre-wrap; margin: 0; background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 12px; line-height: 1.5; font-size: 13px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 1080px) {
+      .shell { grid-template-columns: 1fr; }
+      .sidebar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .mode-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .settings-grid { grid-template-columns: 1fr; }
+      .report-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+    @media (max-width: 720px) {
+      .topbar-inner { align-items: flex-start; flex-direction: column; }
+      .top-actions { justify-content: flex-start; }
+      .shell { padding: 12px; gap: 12px; }
+      .sidebar { grid-template-columns: 1fr; }
+      .grid-2 { grid-template-columns: 1fr; }
+      .metrics { grid-template-columns: 1fr; }
+      .mode-grid { grid-template-columns: 1fr; }
+      .metric-value { font-size: 26px; }
+      .event-top { flex-direction: column; }
+      .speaker-item { grid-template-columns: auto minmax(0, 1fr) auto; }
+      .profile-metrics, .report-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .profile-columns, .report-columns { grid-template-columns: 1fr; }
+      .panel-header { flex-wrap: wrap; align-items: flex-start; }
+      .events-toolbar, .report-actions { width: 100%; justify-content: flex-start; }
+      #speakerFilter { width: 100% !important; }
+      .event-meta .pill { white-space: normal; max-width: 100%; overflow-wrap: anywhere; text-align: left; }
+      .report-footer { text-align: left; }
+      .report-speaker-row { grid-template-columns: minmax(0, 1fr) auto; }
+      .report-speaker-bar { grid-column: 1 / 3; grid-row: 2; }
+    }
+  </style>
+</head>
+<body>
+  <!-- ── Intervention Notification ── -->
+  <div class="int-notify" id="intNotify">
+    <div class="int-notify-header">
+      <span class="int-notify-icon">🚨</span>
+      <span class="int-notify-title" id="intNotifyTitle">检测到语言暴力并已干预</span>
+    </div>
+    <div class="int-notify-text" id="intNotifyText"></div>
+    <div id="intNotifyMeta" class="int-notify-meta" style="font-size:12px;color:var(--muted)"></div>
+    <div class="int-notify-action">系统已自动播放语音干预</div>
+    <button class="int-notify-close" onclick="dismissNotify()">我知道了</button>
+  </div>
+
+  <div class="app">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <div class="brand-title">语言暴力干预系统控制台</div>
+          <div class="brand-subtitle" id="lastUpdated">等待同步状态</div>
+        </div>
+        <div class="top-actions">
+          <button class="btn btn-primary" id="btnStart" onclick="startSystem()">▶ 启动检测</button>
+          <button class="btn btn-danger" id="btnStop" onclick="confirmStop()">■ 停止检测</button>
+          <button class="btn" onclick="refreshAll()">↻ 刷新</button>
+          <button class="btn" onclick="openSettingsDialog()">⚙ 设置</button>
+          <button class="btn" onclick="openAdvancedDialog()">⚡ 高级配置</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="shell">
+      <aside class="sidebar">
+        <!-- 设备状态 -->
+        <section class="panel">
+          <div class="panel-header">
+            <div class="panel-title">设备状态</div>
+            <span class="status-pill muted-pill" id="runStatus">读取中</span>
+          </div>
+          <div class="device-list">
+            <div class="kv"><div class="kv-label">主机</div><div class="kv-value" id="hostName">raspberrypi</div></div>
+            <div class="kv"><div class="kv-label">Web</div><div class="kv-value" id="webService">-</div></div>
+            <div class="kv"><div class="kv-label">检测</div><div class="kv-value" id="detectorService">-</div></div>
+            <div class="kv"><div class="kv-label">清理定时</div><div class="kv-value" id="cleanupTimer">-</div></div>
+            <div class="kv"><div class="kv-label">存储</div><div class="kv-value" id="diskUsage">-</div></div>
+            <div class="kv"><div class="kv-label">录音文件</div><div class="kv-value" id="audioFiles">-</div></div>
+          </div>
+        </section>
+
+        <!-- 隐私 -->
+        <section class="panel">
+          <div class="panel-header">
+            <div class="panel-title">隐私</div>
+            <span class="status-pill" id="privacyBadge">-</span>
+          </div>
+          <div class="device-list">
+            <div class="kv"><div class="kv-label">原始音频</div><div class="kv-value" id="saveRecordings">-</div></div>
+            <div class="kv"><div class="kv-label">云服务</div><div class="kv-value" id="cloudMode">-</div></div>
+            <div class="kv"><div class="kv-label">事件日志</div><div class="kv-value">本地 JSONL + CSV</div></div>
+          </div>
+        </section>
+
+        <!-- 学习阈值 -->
+        <section class="panel">
+          <div class="panel-header">
+            <div class="panel-title">学习阈值</div>
+            <span class="status-pill teal" id="learningBadge">启用</span>
+          </div>
+          <div id="thresholds" class="device-list"></div>
+          <div class="small-actions">
+            <button class="btn btn-green" id="btnAnalyze" onclick="triggerLearning()">分析优化</button>
+            <button class="btn" onclick="showLearningReport()">报告</button>
+          </div>
+        </section>
+
+        <!-- 干预日志 (新) -->
+        <section class="panel" id="safetyPanel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">安全处置</div>
+              <div class="panel-note">高风险事项需人工复核并记录结果</div>
+            </div>
+            <span class="status-pill" id="safetyBadge">读取中</span>
+          </div>
+          <div id="safetyCaseList" class="int-list"><div class="empty" style="padding:16px">加载中…</div></div>
+        </section>
+
+        <section class="panel" id="intLogPanel">
+          <div class="panel-header">
+            <div class="panel-title">干预记录</div>
+            <button class="btn" style="min-height:28px;font-size:12px;padding:0 8px;" onclick="fetchInterventions()">↻</button>
+          </div>
+          <div id="intLogList" class="int-list"><div class="empty" style="padding:16px">加载中…</div></div>
+        </section>
+      </aside>
+
+      <section class="main">
+        <!-- 指标 -->
+        <section class="metrics">
+          <div class="metric">
+            <div class="metric-label">检测事件</div>
+            <div class="metric-value" id="totalEvents">0</div>
+            <div class="metric-foot">最近 1000 条统计</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">暴力检出</div>
+            <div class="metric-value" id="violenceEvents">0</div>
+            <div class="metric-foot" id="violenceRate">0%</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">干预次数</div>
+            <div class="metric-value" id="interventionCount">0</div>
+            <div class="metric-foot" id="interventionRate">-</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">反馈样本</div>
+            <div class="metric-value" id="totalFeedback">0</div>
+            <div class="metric-foot" id="feedbackBreakdown">-</div>
+          </div>
+        </section>
+
+        <!-- 历史趋势图 -->
+        <section class="panel" id="trendPanel">
+          <div class="panel-header">
+            <div class="panel-title">📊 检测趋势（7天）</div>
+            <div class="report-actions">
+              <select class="select" style="height:32px;font-size:12px;width:90px" id="trendDays" onchange="fetchTrend()">
+                <option value="3">近3天</option>
+                <option value="7" selected>近7天</option>
+                <option value="14">近14天</option>
+                <option value="30">近30天</option>
+              </select>
+            </div>
+          </div>
+          <div class="trend-chart-wrap">
+            <canvas id="trendChart"></canvas>
+          </div>
+        </section>
+
+        <!-- 运行模式 -->
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">运行模式</div>
+              <div class="panel-note">显示配置目标和当前可用能力，未配置密钥时自动回退</div>
+            </div>
+            <span class="status-pill" id="modeSummary">-</span>
+          </div>
+          <div class="mode-grid">
+            <div class="mode-card"><div class="mode-name">ASR</div><div class="mode-value" id="asrMode">-</div><div class="mode-sub" id="asrSub">-</div></div>
+            <div class="mode-card"><div class="mode-name">语义 LLM</div><div class="mode-value" id="semanticMode">-</div><div class="mode-sub" id="semanticSub">-</div></div>
+            <div class="mode-card"><div class="mode-name">情绪 LLM</div><div class="mode-value" id="emotionMode">-</div><div class="mode-sub" id="emotionSub">-</div></div>
+            <div class="mode-card"><div class="mode-name">TTS</div><div class="mode-value" id="ttsMode">-</div><div class="mode-sub" id="ttsSub">-</div></div>
+            <div class="mode-card"><div class="mode-name">声纹</div><div class="mode-value" id="voiceMode">本地 ECAPA</div><div class="mode-sub" id="voiceSub">读取中</div></div>
+            <div class="mode-card">
+              <div class="mode-name">媒体声过滤</div>
+              <div class="mode-value" id="mediaGuardMode">读取中</div>
+              <div class="mode-sub" id="mediaGuardSub">-</div>
+              <div class="small-actions"><button class="btn-mini" onclick="openMediaGuard()">校准管理</button></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 说话人管理 + 快速设置 -->
+        <section class="grid-2">
+          <!-- 说话人管理 -->
+          <section class="panel" id="speakerPanel">
+            <div class="panel-header">
+              <div>
+                <div class="panel-title">人员画像</div>
+                <div class="panel-note">基于转写内容形成互动与风险观察</div>
+              </div>
+              <div style="display:flex;gap:6px">
+                <button class="btn" style="min-height:30px;font-size:12px;padding:0 9px;" onclick="openVoiceprintManager()">声纹管理</button>
+                <button class="btn" style="min-height:30px;font-size:12px;padding:0 9px;" onclick="newSpeakerProfile()">新增档案</button>
+                <button class="btn btn-icon" style="width:30px;min-height:30px;font-size:16px;" title="刷新画像" onclick="fetchSpeakers()">↻</button>
+              </div>
+            </div>
+            <div class="sub-tabs">
+              <button class="sub-tab active" onclick="switchSpeakerTab('all')" id="stAll">全部</button>
+              <button class="sub-tab" onclick="switchSpeakerTab('known')" id="stKnown">需关注</button>
+            </div>
+            <div id="speakerList" class="speaker-list"><div class="empty" style="padding:16px">加载中…</div></div>
+          </section>
+
+          <!-- 快速设置 -->
+          <section class="panel">
+            <div class="panel-header">
+              <div class="panel-title">快速设置</div>
+              <div class="panel-note">保存后需重启检测服务生效</div>
+            </div>
+            <div class="settings-grid">
+              <div class="setting-card">
+                <div class="setting-label">场景</div>
+                <select class="select" id="sceneSelect" onchange="saveConfig({ scene: this.value })">
+                  <option value="家庭">家庭</option>
+                  <option value="夫妻">夫妻</option>
+                  <option value="教育">教育</option>
+                  <option value="儿童保护">儿童保护</option>
+                  <option value="自定义">自定义</option>
+                </select>
+              </div>
+              <div class="setting-card">
+                <div class="setting-label">
+                  灵敏度
+                  <span class="sensitivity-help" style="margin-left:4px">？
+                    <span class="sensitivity-tooltip">
+                      家庭 0.6·夫妻 0.7·教育 0.5·儿童保护 0.9<br>
+                      越接近 1.0 = 越容易触发检测和干预<br>
+                      儿童保护模式下建议保持 0.9
+                    </span>
+                  </span>
+                  <span id="sensitivityValue">0.60</span>
+                </div>
+                <input class="slider" id="sensitivitySlider" type="range" min="0.3" max="0.9" step="0.05" value="0.6"
+                  oninput="updateSensitivityUI(this.value)" onchange="saveConfig({ sensitivity: parseFloat(this.value) })" />
+              </div>
+              <div class="setting-card">
+                <div class="setting-label">ASR 引擎</div>
+                <select class="select" id="asrSelect" onchange="saveConfig({ asr_engine: this.value })">
+                  <option value="ali_asr">DashScope 云端</option>
+                  <option value="local_whisper">本地 Whisper</option>
+                </select>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <!-- 文档符合度 + 事件列表 -->
+        <section class="grid-2">
+          <section class="panel">
+            <div class="panel-header">
+              <div class="panel-title">文档符合度</div>
+              <span class="status-pill" id="complianceScore">-</span>
+            </div>
+            <div class="compliance-list" id="complianceList"></div>
+          </section>
+
+          <!-- 导出 -->
+          <section class="panel">
+            <div class="panel-header">
+              <div class="panel-title">📥 事件导出</div>
+            </div>
+            <div style="display:grid;gap:10px">
+              <div style="display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:center;font-size:13px">
+                <label>开始日期</label>
+                <input class="input" type="date" id="exportStart" />
+              </div>
+              <div style="display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:center;font-size:13px">
+                <label>结束日期</label>
+                <input class="input" type="date" id="exportEnd" />
+              </div>
+              <button class="btn btn-teal" onclick="exportEvents()">📥 导出 CSV</button>
+              <div id="exportResult" style="font-size:12px;color:var(--muted)"></div>
+            </div>
+          </section>
+        </section>
+
+        <!-- 趋势报告 -->
+        <section class="panel" id="reportPanel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">📋 趋势报告</div>
+            </div>
+            <div class="report-actions">
+              <select class="select" id="reportType" style="height:32px;font-size:13px;width:100px" onchange="switchReportTab()">
+                <option value="daily">日报</option>
+                <option value="weekly">周报</option>
+                <option value="monthly">月报</option>
+              </select>
+              <input class="input" id="reportDateInput" type="date" style="height:32px;font-size:12px;width:130px" onchange="loadReport()" />
+              <button class="btn" style="min-height:32px;font-size:12px;padding:0 10px" onclick="loadReport()">生成报告</button>
+              <button class="btn btn-teal" style="min-height:32px;font-size:12px;padding:0 10px" onclick="saveCurrentReport()">保存报告</button>
+            </div>
+          </div>
+          <div id="reportContent">
+            <div class="empty" style="padding:24px">点击「生成报告」查看分析</div>
+          </div>
+        </section>
+
+        <!-- 检测事件 -->
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">检测事件</div>
+              <div class="panel-note" id="eventsCount">-</div>
+            </div>
+            <div class="events-toolbar">
+              <!-- 说话人筛选 -->
+              <select class="select" id="speakerFilter" style="height:34px;font-size:13px;width:120px" onchange="renderEvents()">
+                <option value="">全部说话人</option>
+              </select>
+              <div class="tabs">
+                <button class="tab active" id="tabAll" onclick="setEventFilter('all')">全部</button>
+                <button class="tab" id="tabViolence" onclick="setEventFilter('violence')">暴力</button>
+                <button class="tab" id="tabAcoustic" onclick="setEventFilter('acoustic')">声学</button>
+                <button class="tab" id="tabIntervention" onclick="setEventFilter('intervention')">已干预</button>
+              </div>
+              <button class="btn" onclick="fetchEvents()">刷新事件</button>
+            </div>
+          </div>
+          <div class="event-list" id="eventsList"><div class="empty">正在读取事件</div></div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <!-- 设置对话框 -->
+  <dialog id="settingsDialog" style="max-width:760px">
+    <div class="modal-head">
+      <strong>云服务与模型设置</strong>
+      <button class="btn btn-icon" onclick="closeSettingsDialog()">×</button>
+    </div>
+    <div class="modal-body" style="padding:12px 16px">
+      <!-- 子标签页 -->
+      <div class="sub-tabs" id="settingsTabs" style="margin-bottom:14px">
+        <button class="sub-tab active" onclick="switchSettingsTab('key')" id="stKey">🔑 API Key</button>
+        <button class="sub-tab" onclick="switchSettingsTab('llm')" id="stLlm">🧠 LLM 模型</button>
+        <button class="sub-tab" onclick="switchSettingsTab('asr')" id="stAsr">🎤 ASR</button>
+        <button class="sub-tab" onclick="switchSettingsTab('tts')" id="stTts">🔊 TTS</button>
+      </div>
+
+      <!-- API Key 标签页 -->
+      <div id="panelKey">
+        <div class="setting-card" style="margin-bottom:12px">
+          <div class="setting-label">DashScope API Key</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input class="input" id="apiKeyInput" type="password" placeholder="sk-xxxxxxxxxxxxxxxx" style="flex:1" />
+            <button class="btn btn-teal" onclick="saveApiKey()">保存 Key</button>
+          </div>
+          <div class="panel-note" style="margin-top:6px">Key 仅保存在树莓派 .env 中，页面不会回显明文</div>
+        </div>
+        <div class="setting-card">
+          <div class="setting-label">DashScope 地域</div>
+          <select class="select" id="dashscopeRegion" onchange="saveRegion()">
+            <option value="beijing">北京</option>
+            <option value="shanghai">上海</option>
+            <option value="hangzhou">杭州</option>
+            <option value="shenzhen">深圳</option>
+            <option value="guangzhou">广州</option>
+            <option value="singapore">新加坡</option>
+          </select>
+        </div>
+        <div id="keyTestResult" style="margin-top:10px;font-size:13px"></div>
+      </div>
+
+      <!-- LLM 模型标签页 -->
+      <div id="panelLlm" style="display:none">
+        <div class="grid-2">
+          <div class="setting-card">
+            <div class="setting-label">🧠 语义分析模型</div>
+            <select class="select" id="semanticModelSelect" style="margin-bottom:8px">
+              <option value="">加载中…</option>
+            </select>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:8px">用途：深度语义暴力检测、隐含暴力识别</div>
+            <div class="small-actions">
+              <button class="btn" onclick="loadModels()">🔄 刷新模型</button>
+              <button class="btn btn-green" onclick="testLlm()">▶ 测试连接</button>
+            </div>
+          </div>
+          <div class="setting-card">
+            <div class="setting-label">😊 情绪分析模型</div>
+            <select class="select" id="emotionModelSelect" style="margin-bottom:8px">
+              <option value="">加载中…</option>
+            </select>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:8px">用途：说话人情绪强度量化</div>
+            <div class="small-actions">
+              <button class="btn btn-green" onclick="testEmotion()">▶ 测试连接</button>
+            </div>
+          </div>
+        </div>
+        <div id="llmTestResult" class="panel-note" style="margin-top:12px"></div>
+      </div>
+
+      <!-- ASR 标签页 -->
+      <div id="panelAsr" style="display:none">
+        <div class="setting-card" style="margin-bottom:12px">
+          <div class="setting-label">ASR 引擎选择</div>
+          <select class="select" id="asrEngineSelect" style="margin-bottom:8px" onchange="onAsrEngineChange()">
+            <option value="ali_asr">DashScope 云端 ASR（需 Key）</option>
+            <option value="local_whisper">本地 Whisper（离线，无需 Key）</option>
+          </select>
+          <div style="font-size:12px;color:var(--muted)">
+            DashScope 云端：媒体过滤通过后上传转写 · 本地 Whisper：纯离线隐私保护
+          </div>
+        </div>
+        <div id="asrModelPanel">
+          <div class="setting-card" style="margin-bottom:12px">
+            <div class="setting-label">ASR 模型</div>
+            <select class="select" id="asrModelSelect" style="margin-bottom:8px">
+              <option value="">请先配置 API Key 并刷新</option>
+            </select>
+            <div class="small-actions">
+              <button class="btn" onclick="loadAsrModels()">🔄 刷新</button>
+              <button class="btn btn-green" onclick="testAsr()">▶ 测试连接</button>
+            </div>
+            <div id="asrTestResult" class="panel-note" style="margin-top:8px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TTS 标签页 -->
+      <div id="panelTts" style="display:none">
+        <div class="setting-card" style="margin-bottom:12px">
+          <div class="setting-label">TTS 引擎选择</div>
+          <select class="select" id="ttsEngineSelect" style="margin-bottom:8px" onchange="onTtsEngineChange()">
+            <option value="edge_tts">Edge TTS（无需 Key，需联网）</option>
+            <option value="sambert">SamBERT 云端（需 Key，音质更好）</option>
+          </select>
+        </div>
+        <div id="ttsModelPanel">
+          <div class="setting-card" style="margin-bottom:12px">
+            <div id="ttsSambertModelField">
+              <div class="setting-label">SamBERT 音色</div>
+              <select class="select" id="ttsModelSelect" style="margin-bottom:8px">
+                <option value="">加载中…</option>
+              </select>
+            </div>
+            <div id="ttsEdgeVoiceField" style="display:none">
+              <div class="setting-label">Edge TTS 音色</div>
+              <select class="select" id="ttsVoiceSelect" style="margin-bottom:8px">
+                <option value="zh-CN-XiaoxiaoNeural">晓晓（自然女声）</option>
+              </select>
+            </div>
+            <div class="small-actions" id="ttsCloudActions">
+              <button class="btn" onclick="loadTtsModels()">🔄 刷新</button>
+              <button class="btn btn-green" onclick="testTts()">▶ 测试连接</button>
+            </div>
+            <div id="ttsTestResult" class="panel-note" style="margin-top:8px"></div>
+          </div>
+        </div>
+        <div class="setting-card">
+          <div class="setting-label">🎵 试播测试</div>
+          <input class="input" id="ttsTestText" placeholder="输入要试播的文字" style="margin-bottom:8px" value="请冷静一下，换一种表达方式可能会有更好的效果。" />
+          <button class="btn btn-teal" onclick="previewTts()">▶ 试播（由后端播放）</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-teal" onclick="saveAllModels()">💾 保存全部配置</button>
+      <button class="btn btn-primary" onclick="closeSettingsDialog()">完成</button>
+    </div>
+  </dialog>
+
+  <!-- 学习报告对话框 -->
+  <dialog id="safetyCaseDialog" style="max-width:620px">
+    <div class="modal-head">
+      <strong>安全事项处置记录</strong>
+      <button class="btn btn-icon" title="关闭" onclick="$('safetyCaseDialog').close()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="profile-notice">本记录用于人工核实即时安全风险和支持需求，不表示自动诊断。若存在正在发生的紧急危险，请立即联系当地紧急服务。</div>
+      <div id="safetyCaseSummary" class="screening-box" style="margin-bottom:14px"></div>
+      <div class="safety-form">
+        <input id="safetyCaseId" type="hidden" />
+        <label>处置状态
+          <select class="select" id="safetyCaseStatus">
+            <option value="pending">待复核</option>
+            <option value="acknowledged">跟进中</option>
+            <option value="resolved">已处置</option>
+            <option value="dismissed">已排除即时风险</option>
+          </select>
+        </label>
+        <label>采取措施
+          <select class="select" id="safetyCaseAction">
+            <option value="">请选择</option>
+            <option value="contacted_subject">已联系本人核实安全</option>
+            <option value="contacted_trusted_person">已联系可信支持人</option>
+            <option value="contacted_emergency_services">已联系紧急服务</option>
+            <option value="referred_professional">已建议或转介专业支持</option>
+            <option value="monitoring">继续观察并安排跟进</option>
+            <option value="no_immediate_risk">经核实暂无即时风险</option>
+          </select>
+        </label>
+        <label>处置说明
+          <textarea class="input" id="safetyCaseNote" maxlength="500" placeholder="记录核实结果、已提供的支持或后续跟进安排"></textarea>
+        </label>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="$('safetyCaseDialog').close()">取消</button>
+      <button class="btn btn-teal" onclick="saveSafetyCase()">保存处置记录</button>
+    </div>
+  </dialog>
+
+  <dialog id="mediaGuardDialog" style="max-width:620px">
+    <div class="modal-head">
+      <div>
+        <strong>电视与歌曲声音过滤</strong>
+        <div class="panel-note">本机声学特征校准</div>
+      </div>
+      <button class="btn btn-icon" title="关闭" onclick="$('mediaGuardDialog').close()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="profile-notice">当前麦克风为单声道，过滤仅对与媒体样本高度相似的声音生效；不确定声音与异常大音量声音继续进入安全检测。</div>
+      <div id="mediaGuardSummary" class="screening-box" style="margin-bottom:14px"></div>
+      <div class="safety-form">
+        <label class="consent-row"><input type="checkbox" id="mediaGuardEnabled" />启用电视与歌曲声音过滤</label>
+        <label>过滤策略
+          <select class="select" id="mediaGuardModeSelect">
+            <option value="balanced">稳妥过滤（推荐）</option>
+            <option value="strict">加强过滤（可能漏掉远处真人语音）</option>
+          </select>
+        </label>
+        <button class="btn" onclick="saveMediaGuardConfig()">保存过滤设置</button>
+        <div class="screening-box">
+          <div class="profile-section-title">采集校准样本</div>
+          <label class="consent-row"><input type="checkbox" id="mediaSourceConfirm" />当前声音来源与所点击的采集类别一致；采集期间检测会短暂停止</label>
+          <div class="small-actions">
+            <button class="btn btn-teal" onclick="calibrateMediaGuard('media')">采集电视/歌曲样本</button>
+            <button class="btn" onclick="clearMediaGuard('media')">删除媒体样本</button>
+          </div>
+          <label class="consent-row"><input type="checkbox" id="mediaHumanConsent" />真人样本已取得本人知情同意，仅保存本机声学特征</label>
+          <div class="small-actions">
+            <button class="btn btn-teal" onclick="calibrateMediaGuard('human')">采集真人语音样本</button>
+            <button class="btn" onclick="clearMediaGuard('human')">删除真人样本</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-primary" onclick="$('mediaGuardDialog').close()">完成</button>
+    </div>
+  </dialog>
+
+  <dialog id="reportDialog">
+    <div class="modal-head">
+      <strong>学习报告</strong>
+      <button class="btn btn-icon" onclick="document.getElementById('reportDialog').close()">×</button>
+    </div>
+    <div class="modal-body"><pre class="report" id="reportText"></pre></div>
+  </dialog>
+
+  <dialog id="speakerProfileDialog" style="max-width:940px">
+    <div class="modal-head">
+      <div>
+        <strong id="speakerProfileTitle">人员画像</strong>
+        <div class="panel-note" id="speakerProfileSub">人工档案</div>
+      </div>
+      <button class="btn btn-icon" title="关闭" onclick="$('speakerProfileDialog').close()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="profile-notice" id="speakerContentNotice"></div>
+      <div class="profile-metrics" id="speakerMetrics"></div>
+      <div class="profile-columns">
+        <div>
+          <div class="profile-section-title">内容观察摘要</div>
+          <div class="observation-summary" id="speakerObservationSummary"></div>
+          <div class="observation-grid" id="speakerDimensions"></div>
+          <div class="profile-section-title">信号证据摘录</div>
+          <div class="profile-events" id="speakerEvidence"></div>
+          <div class="profile-section-title" style="margin-top:14px">近期说话内容</div>
+          <div class="profile-events" id="speakerRecentEvents"></div>
+        </div>
+        <div class="profile-form">
+          <div class="profile-section-title">人工维护</div>
+          <input type="hidden" id="speakerRecordId" />
+          <label>显示名称<input class="input" id="speakerDisplayName" maxlength="40" placeholder="例如：家庭成员 A" /></label>
+          <label>关系/角色<input class="input" id="speakerRelationship" maxlength="30" placeholder="例如：监护人、儿童" /></label>
+          <label>关注级别
+            <select class="select" id="speakerAttention">
+              <option value="normal">常规观察</option>
+              <option value="watch">持续关注</option>
+              <option value="priority">优先跟进</option>
+            </select>
+          </label>
+          <label>人工备注<textarea class="input" id="speakerNotes" maxlength="300" placeholder="记录需跟进的背景与处理情况"></textarea></label>
+          <div class="screening-box">
+            <div class="profile-section-title" style="margin-bottom:0">本人自愿心理筛查</div>
+            <div class="voiceprint-detail">标准量表结果仅作筛查提示，不构成诊断；须由本人自愿填写。</div>
+            <div class="voiceprint-detail">量表出处参考：国家卫生健康委《消防救援人员职业健康保护指南》（GBZ/T 343-2026，2026-07-01 实施）附录 G 列示 PHQ-9 / GAD-7；不作为家庭个案诊断依据。</div>
+            <div id="screeningSummary" class="voiceprint-detail">尚无本人提交的筛查记录。</div>
+            <div class="small-actions" style="margin-top:0">
+              <button class="btn" id="btnPhqScreen" onclick="openScreening('phq9')">填写 PHQ-9</button>
+              <button class="btn" id="btnGadScreen" onclick="openScreening('gad7')">填写 GAD-7</button>
+              <button class="btn btn-danger" id="btnClearScreenings" onclick="deleteScreeningHistory()">删除结果</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="$('speakerProfileDialog').close()">关闭</button>
+      <button class="btn btn-primary" onclick="saveSpeakerProfile()">保存档案</button>
+    </div>
+  </dialog>
+
+  <dialog id="voiceprintDialog" style="max-width:560px">
+    <div class="modal-head">
+      <div>
+        <strong>声纹管理</strong>
+        <div class="panel-note">本地身份关联模板</div>
+      </div>
+      <button class="btn btn-icon" title="关闭" onclick="$('voiceprintDialog').close()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="profile-notice">声纹模板仅用于将后续声音概率关联到具名档案，与内容画像和心理筛查分开保存。</div>
+      <div class="profile-form">
+        <label>选择具名档案
+          <select class="select" id="voiceprintSpeakerSelect" onchange="loadVoiceprintSelection()"></select>
+        </label>
+        <div class="voiceprint-box">
+          <div id="voiceprintStatus" class="voiceprint-detail">请选择档案。</div>
+          <label class="consent-row"><input type="checkbox" id="voiceprintConsent" />已取得本人知情同意，允许本机保存声纹特征模板</label>
+          <div class="voiceprint-detail">采集约 5 秒，期间检测将短暂停止并自动恢复；采集原音频不会保存。</div>
+          <div class="small-actions" style="margin-top:0">
+            <button class="btn btn-teal" id="btnEnrollVoiceprint" onclick="enrollVoiceprint()">采集样本</button>
+            <button class="btn" id="btnTestVoiceprint" onclick="testVoiceprint()">测试识别</button>
+            <button class="btn btn-danger" id="btnDeleteVoiceprint" onclick="deleteVoiceprint()">删除模板</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="$('voiceprintDialog').close()">关闭</button>
+    </div>
+  </dialog>
+
+  <dialog id="screeningDialog" style="max-width:620px">
+    <div class="modal-head">
+      <div>
+        <strong id="screeningTitle">本人自愿心理筛查</strong>
+        <div class="panel-note" id="screeningSub"></div>
+      </div>
+      <button class="btn btn-icon" title="关闭" onclick="$('screeningDialog').close()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="profile-notice">请由档案本人根据过去两周的真实感受作答。量表只用于筛查提示；若存在即时安全风险，应立即寻求专业或紧急帮助。</div>
+      <div id="screeningQuestions" class="screening-form"></div>
+      <label class="consent-row" style="margin-top:14px"><input type="checkbox" id="screeningConsent" />本人正在自愿填写，并同意在本机保存本次筛查总分与提示结果</label>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="$('screeningDialog').close()">取消</button>
+      <button class="btn btn-primary" onclick="submitScreening()">提交筛查</button>
+    </div>
+  </dialog>
+
+  <!-- 高级配置对话框 -->
+  <dialog id="advancedDialog" style="max-width:640px">
+    <div class="modal-head">
+      <strong>⚡ 高级配置</strong>
+      <button class="btn btn-icon" onclick="document.getElementById('advancedDialog').close()">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px">
+        完整配置 JSON，可直接编辑。修改后点击"保存"写入文件，重启服务生效。
+      </div>
+      <textarea id="fullConfigEditor" class="input" style="height:400px;font-family:monospace;font-size:12px;line-height:1.5;resize:vertical;padding:10px" placeholder="加载中…"></textarea>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="loadFullConfig()">重载</button>
+      <button class="btn btn-primary" onclick="saveFullConfig()">保存配置</button>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const state = { status: null, health: null, learning: null, voiceprints: null, safety: null, mediaGuard: null, activeSafetyCase: null, events: [], marks: {}, filter: 'all', speakers: [], speakerFilter: 'all', trendChart: null, activeSpeakerId: null, activeSpeakerProfile: null, activeVoiceprintId: null, activeVoiceprint: null, screeningInstruments: null, activeScreeningInstrument: null };
+    const $ = (id) => document.getElementById(id);
+    const esc = (v) => String(v ?? '').replace(/[&<>'"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+    const pct = (v) => `${Math.round((Number(v) || 0) * 100)}%`;
+    const timeText = (e) => e.ts ? new Date(e.ts * 1000).toLocaleString('zh-CN') : (e.timestamp || '-');
+    const displayLabels = {
+      emotionType: { unknown: '未知' },
+      emotionIntensity: { high: '高', medium: '中', low: '低', none: '无', unknown: '未知' },
+      severity: { high: '高风险', medium: '中风险', low: '低风险', none: '无风险', unknown: '未知' },
+      volume: { shouting: '喊叫', loud: '偏大', normal: '正常', quiet: '安静', unknown: '未知' },
+      pitch: { rising: '升高', falling: '降低', stable: '平稳', unknown: '未知' },
+      speaker: { unknown: '未识别说话人', '未知': '未识别说话人' },
+      scene: { unknown: '未知场景' },
+      violenceType: { unknown: '未分类' },
+      service: { active: '运行中', inactive: '未运行', failed: '异常', activating: '启动中', deactivating: '停止中', reloading: '重载中', maintenance: '维护中', unknown: '未知' },
+      ttsEngine: { edge_tts: 'Edge TTS', sambert: 'SamBERT' },
+      safetyStatus: { pending: '待复核', acknowledged: '跟进中', resolved: '已处置', dismissed: '已排除即时风险' },
+      safetyAction: { contacted_subject: '已联系本人核实安全', contacted_trusted_person: '已联系可信支持人', contacted_emergency_services: '已联系紧急服务', referred_professional: '已建议或转介专业支持', monitoring: '继续观察并安排跟进', no_immediate_risk: '经核实暂无即时风险' }
+    };
+    function displayText(group, value, fallback = '-') {
+      const raw = String(value ?? '').trim();
+      if (!raw) return fallback;
+      return displayLabels[group]?.[raw] || raw;
+    }
+
+    /* ── Toast ── */
+    function showToast(msg, duration = 2200) {
+      const el = $('toast');
+      el.textContent = msg;
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), duration);
+    }
+
+    /* ── Pill helpers ── */
+    function pillClass(ok, warn = false) { return ok ? 'ok' : warn ? 'warn' : 'bad'; }
+    function servicePill(v) {
+      const ok = v === 'active';
+      return `<span class="pill ${ok ? 'ok' : 'bad'}">${esc(displayText('service', v, '未知'))}</span>`;
+    }
+
+    /* ── Fetch ── */
+    async function fetchJson(url, options) {
+      const merged = { ...(options || {}) };
+      merged.headers = { 'X-Requested-With': 'FamilyViolenceConsole', ...(merged.headers || {}) };
+      const res = await fetch(url, merged);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || data.message || res.statusText);
+      return data;
+    }
+
+    /* ── Full refresh ── */
+    async function refreshAll() {
+      try {
+        const [status, learning, marks, health, voiceprints, safety] = await Promise.all([
+          fetchJson('/api/status'),
+          fetchJson('/api/learning/report').catch(() => ({ ok: false })),
+          fetchJson('/api/events/marks').catch(() => ({})),
+          fetchJson('/api/health').catch(() => null),
+          fetchJson('/api/voiceprints').catch(() => null),
+          fetchJson('/api/safety/cases?limit=30').catch(() => null)
+        ]);
+        state.status = status;
+        state.learning = learning;
+        state.marks = marks || {};
+        state.health = health;
+        state.voiceprints = voiceprints;
+        state.safety = safety;
+        state.mediaGuard = status.config?.media_guard || null;
+        renderStatus();
+        renderLearning();
+        renderHealth();
+        renderMetrics();
+        renderCompliance();
+        renderSafetyCases();
+        await fetchEvents(false);
+        await fetchSpeakers(false);
+        await fetchInterventions(false);
+        await fetchTrend();
+        $('lastUpdated').textContent = `最后同步 ${new Date().toLocaleString('zh-CN')}`;
+      } catch (error) {
+        showToast(`刷新失败：${error.message}`);
+      }
+    }
+
+    /* ── Render: Status ── */
+    function renderStatus() {
+      const data = state.status || {};
+      const cfg = data.config || {};
+      $('runStatus').textContent = data.running ? '运行中' : '已停止';
+      $('runStatus').className = `status-pill ${data.running ? 'ok' : 'bad'}`;
+      $('btnStart').disabled = !!data.running;
+      $('btnStop').disabled = !data.running;
+      $('sceneValue') && ($('sceneValue').textContent = data.scene || '-');
+      $('sceneSelect').value = data.scene || '家庭';
+      $('sensitivityDisplay') && ($('sensitivityDisplay').textContent = Number(data.sensitivity || 0).toFixed(2));
+      $('sensitivityValue').textContent = Number(data.sensitivity || 0).toFixed(2);
+      $('sensitivitySlider').value = data.sensitivity || 0.6;
+      $('asrSelect').value = cfg.asr_engine || 'local_whisper';
+      $('dashscopeRegion').value = cfg.dashscope_region || 'beijing';
+      $('semanticModelSelect').value = cfg.llm?.semantic_llm?.model || 'qwen-plus';
+      $('emotionModelSelect').value = cfg.llm?.emotion_llm?.model || 'qwen-turbo';
+      $('saveRecordings').innerHTML = cfg.save_recordings ? '<span class="pill bad">保存原始音频</span>' : '<span class="pill ok">不保存原始音频</span>';
+      $('privacyBadge').textContent = cfg.save_recordings ? '需注意' : '符合';
+      $('privacyBadge').className = `status-pill ${cfg.save_recordings ? 'warn' : 'ok'}`;
+      $('cloudMode').innerHTML = cfg.has_dashscope_key ? '<span class="pill info">DashScope 已配置</span>' : '<span class="pill warn">云能力未启用</span>';
+      $('keyStatus') && ($('keyStatus').className = `pill ${cfg.has_dashscope_key ? 'ok' : 'warn'}`);
+      $('keyStatus') && ($('keyStatus').textContent = cfg.has_dashscope_key ? '已检测到 DashScope key' : '未检测到 DashScope key');
+
+      const cloudReady = !!cfg.has_dashscope_key;
+      $('asrMode').textContent = cfg.asr_engine === 'ali_asr' ? 'DashScope 云端' : '本地 Whisper';
+      $('asrSub').textContent = cfg.asr_engine === 'ali_asr' && !cloudReady
+        ? '目标为云端；当前会回退本地 Whisper'
+        : cfg.asr_engine === 'ali_asr' && cfg.media_guard?.enabled && cfg.media_guard?.ready
+          ? '本地过滤通过后上传'
+          : cfg.asr_engine === 'ali_asr' && cfg.media_guard?.enabled
+            ? '当前流式运行；媒体过滤待校准'
+            : '当前配置可直接运行';
+      $('semanticMode').textContent = cfg.llm?.semantic_llm?.model || '规则引擎';
+      $('semanticSub').textContent = cloudReady ? 'LLM 深度语义启用' : '未配置 key，使用规则分析';
+      $('emotionMode').textContent = cfg.llm?.emotion_llm?.model || '规则情绪';
+      $('emotionSub').textContent = cloudReady ? 'LLM 情绪启用' : '未配置 key，使用规则情绪';
+      $('ttsMode').textContent = displayText('ttsEngine', cfg.tts_engine, 'Edge TTS');
+      $('ttsSub').textContent = cfg.tts_engine === 'sambert' && !cloudReady ? '目标为 SamBERT；当前回退 Edge TTS' : '当前配置可直接播放';
+      const voiceprints = state.voiceprints;
+      $('voiceMode').textContent = '本地 ECAPA';
+      $('voiceSub').textContent = voiceprints?.speaker_count
+        ? `${voiceprints.speaker_count} 人已注册 · 模板仅存本机`
+        : '等待注册模板 · 原音频不保存';
+      const media = cfg.media_guard || {};
+      $('mediaGuardMode').textContent = !media.enabled ? '未启用' : media.ready ? '已就绪' : '待校准';
+      $('mediaGuardSub').textContent = `媒体 ${media.media_samples || 0} / 真人 ${media.human_samples || 0} 样本 · 已过滤 ${media.filtered_count || 0}`;
+      $('modeSummary').textContent = cloudReady ? '文档云能力已就绪' : '离线回退运行';
+      $('modeSummary').className = `status-pill ${cloudReady ? 'ok' : 'warn'}`;
+    }
+
+    /* ── Render: Metrics ── */
+    function renderMetrics() {
+      const data = state.status || {};
+      const cfg = data.config || {};
+      $('totalEvents').textContent = data.stats?.total ?? 0;
+      $('violenceEvents').textContent = data.stats?.violence ?? 0;
+      const rate = data.stats?.total ? (data.stats.violence / data.stats.total * 100).toFixed(1) : '0.0';
+      $('violenceRate').textContent = `${rate}% 检出率`;
+
+      // 干预次数
+      const interventions = state.events.filter(e => e.intervention_triggered).length;
+      $('interventionCount').textContent = interventions;
+      const intRate = data.stats?.total ? (interventions / data.stats.total * 100).toFixed(1) : '0.0';
+      $('interventionRate').textContent = `${intRate}% 干预率`;
+    }
+
+    /* ── Render: Health ── */
+    function renderHealth() {
+      const h = state.health;
+      if (!h) return;
+      $('hostName').textContent = h.host || 'raspberrypi';
+      $('webService').innerHTML = servicePill(h.services?.web);
+      $('detectorService').innerHTML = servicePill(h.services?.detector);
+      $('cleanupTimer').innerHTML = servicePill(h.services?.cleanup_timer);
+      $('diskUsage').textContent = h.disk?.used_percent ? `${h.disk.used_percent} 已用` : '-';
+      $('audioFiles').textContent = `${h.audio?.count ?? 0} 个 / ${h.audio?.size || '-'}`;
+    }
+
+    /* ── Media Playback Guard ── */
+    function mediaGuardText(media) {
+      if (!media?.enabled) return '过滤未启用';
+      if (!media.ready) return '等待媒体与真人两类样本完成校准';
+      return `过滤已就绪 · 已跳过 ${media.filtered_count || 0} 段媒体声音`;
+    }
+
+    function renderMediaGuardDialog(media) {
+      state.mediaGuard = media;
+      $('mediaGuardEnabled').checked = !!media?.enabled;
+      $('mediaGuardModeSelect').value = media?.mode || 'balanced';
+      $('mediaGuardSummary').innerHTML = `
+        <div><span class="pill ${media?.ready ? 'ok' : 'warn'}">${esc(mediaGuardText(media))}</span></div>
+        <div class="voiceprint-detail">电视/歌曲样本 ${media?.media_samples || 0} 个 · 真人语音样本 ${media?.human_samples || 0} 个</div>
+        <div class="voiceprint-detail">原始校准音频不保存；异常大音量声音始终继续检测。</div>
+      `;
+      $('mediaGuardMode').textContent = !media?.enabled ? '未启用' : media?.ready ? '已就绪' : '待校准';
+      $('mediaGuardSub').textContent = `媒体 ${media?.media_samples || 0} / 真人 ${media?.human_samples || 0} 样本 · 已过滤 ${media?.filtered_count || 0}`;
+    }
+
+    async function openMediaGuard() {
+      try {
+        const media = await fetchJson('/api/media-guard');
+        renderMediaGuardDialog(media);
+        $('mediaSourceConfirm').checked = false;
+        $('mediaHumanConsent').checked = false;
+        $('mediaGuardDialog').showModal();
+      } catch (e) {
+        showToast(`媒体声过滤状态读取失败：${e.message}`);
+      }
+    }
+
+    async function saveMediaGuardConfig() {
+      try {
+        const data = await fetchJson('/api/media-guard/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            enabled: $('mediaGuardEnabled').checked,
+            mode: $('mediaGuardModeSelect').value
+          })
+        });
+        renderMediaGuardDialog(data.media_guard);
+        showToast('媒体声过滤设置已保存，重启检测服务后生效', 3500);
+      } catch (e) {
+        showToast(`保存媒体声过滤设置失败：${e.message}`);
+      }
+    }
+
+    async function calibrateMediaGuard(kind) {
+      if (!$('mediaSourceConfirm').checked) return showToast('请先确认当前声音来源与采集类别一致');
+      if (kind === 'human' && !$('mediaHumanConsent').checked) {
+        return showToast('采集真人语音样本前，请先确认知情同意');
+      }
+      try {
+        showToast(kind === 'media' ? '正在采集电视或歌曲声音…' : '正在采集真人语音…', 6000);
+        const data = await fetchJson(`/api/media-guard/calibrate/${kind}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            confirm_source: true,
+            consent: kind === 'human' && $('mediaHumanConsent').checked
+          })
+        });
+        renderMediaGuardDialog(data.media_guard);
+        $('mediaSourceConfirm').checked = false;
+        showToast('校准样本已保存，仅保留本机声学特征', 3500);
+      } catch (e) {
+        showToast(`校准失败：${e.message}`, 4500);
+      }
+    }
+
+    async function clearMediaGuard(kind) {
+      if (!window.confirm(`确定删除${kind === 'media' ? '电视/歌曲' : '真人语音'}校准样本吗？`)) return;
+      try {
+        const data = await fetchJson(`/api/media-guard/calibrate/${kind}`, { method: 'DELETE' });
+        renderMediaGuardDialog(data.media_guard);
+        showToast('校准样本已删除');
+      } catch (e) {
+        showToast(`删除失败：${e.message}`);
+      }
+    }
+
+    /* ── Render: Learning ── */
+    function renderLearning() {
+      const report = state.learning;
+      if (!report?.ok) {
+        $('learningBadge').textContent = '不可用';
+        $('learningBadge').className = 'status-pill bad';
+        return;
+      }
+      const stats = report.stats || {};
+      const thresholds = report.thresholds || {};
+      $('totalFeedback').textContent = stats.total_feedback ?? 0;
+      $('feedbackBreakdown').textContent = `误 ${stats.false_positives || 0} / 漏 ${stats.false_negatives || 0} / 确认 ${stats.confirmed || 0}`;
+      $('btnAnalyze').disabled = (stats.total_feedback || 0) < 5;
+      $('thresholds').innerHTML = [
+        ['暴力置信度', thresholds.violence_confidence_min],
+        ['声学触发分', thresholds.acoustic_risk_min],
+        ['情绪最低分', thresholds.emotion_score_min],
+        ['吼叫 RMS', thresholds.volume_rms_shouting]
+      ].map(([l, v]) => `<div class="threshold-row"><div class="threshold-label">${l}</div><div class="threshold-value">${v ?? '-'}</div></div>`).join('');
+    }
+
+    /* ── Render: Compliance ── */
+    function renderCompliance() {
+      const cfg = state.status?.config || {};
+      const cloud = !!cfg.has_dashscope_key;
+      const items = [
+        ['音频采集/VAD', true, 'ReSpeaker + Silero VAD 运行中'],
+        ['原始音频不持久化', cfg.save_recordings === false, cfg.save_recordings ? '当前仍保存录音' : '已关闭录音保存'],
+        ['云端 ASR', cfg.asr_engine === 'ali_asr' && cloud, cloud ? (cfg.media_guard?.ready ? '过滤通过后发送至 DashScope' : '当前流式；校准后前置过滤') : '未配置 key，当前回退 Whisper'],
+        ['qwen 情绪/语义', cloud, cloud ? 'LLM 可启用' : '未配置 key，当前规则模式'],
+        ['SamBERT TTS', cfg.tts_engine === 'sambert' && cloud, cloud ? 'SamBERT 可启用' : '未配置 key，当前回退 Edge TTS'],
+        ['声纹隐私', state.voiceprints?.storage === 'local_embedding_only', '模板仅存本机，可在独立声纹管理中删除'],
+        ['学习闭环', cfg.learning_enabled, '反馈阈值已接入主检测'],
+        ['事件日志', true, '记录含干预、声学和声纹匹配字段']
+      ];
+      const okCount = items.filter(i => i[1]).length;
+      $('complianceScore').textContent = `${okCount}/${items.length}`;
+      $('complianceScore').className = `status-pill ${okCount === items.length ? 'ok' : okCount >= 5 ? 'warn' : 'bad'}`;
+      $('complianceList').innerHTML = items.map(([title, ok, desc]) => `
+        <div class="compliance-item">
+          <div class="compliance-icon ${ok ? 'ok' : 'warn'}">${ok ? '✓' : '!'}</div>
+          <div><div class="compliance-title">${esc(title)}</div><div class="compliance-desc">${esc(desc)}</div></div>
+          <span class="pill ${ok ? 'ok' : 'warn'}">${ok ? '符合' : '待配置'}</span>
+        </div>
+      `).join('');
+    }
+
+    /* ── Fetch: Speakers ── */
+    async function fetchSpeakers(showMsg = true) {
+      try {
+        const data = await fetchJson('/api/speakers');
+        state.speakers = data.speakers || [];
+        renderSpeakers();
+        // 同步筛选下拉
+        const sel = $('speakerFilter');
+        const curVal = sel.value;
+        sel.innerHTML = '<option value="">全部说话人</option>' + state.speakers
+          .filter(s => s.event_count > 0)
+          .map(s => `<option value="${esc(s.speaker_id)}">${esc(s.display_name || s.speaker_id)}</option>`).join('');
+        sel.value = curVal;
+        if (showMsg) showToast(`画像已刷新，共 ${state.speakers.length} 条档案`);
+      } catch (e) {
+        $('speakerList').innerHTML = `<div class="empty">加载失败：${esc(e.message)}</div>`;
+      }
+    }
+
+    function attentionText(level) {
+      return ({ normal: '常规', watch: '持续关注', priority: '优先跟进' })[level] || '常规';
+    }
+
+    function observationPill(profile) {
+      const observation = profile.content_observation || {};
+      if (observation.level === 'high') return ['bad', '优先复核'];
+      if (observation.level === 'watch') return ['warn', '持续观察'];
+      if (observation.level === 'normal') return ['ok', '暂无显著信号'];
+      return ['muted-pill', '样本不足'];
+    }
+
+    function renderSpeakers() {
+      const spkList = state.speakerFilter === 'known'
+        ? state.speakers.filter(s => s.attention_level !== 'normal' || s.violence_count > 0)
+        : state.speakers;
+      if (!spkList.length) {
+        $('speakerList').innerHTML = '<div class="empty">暂无数据</div>';
+        return;
+      }
+      $('speakerList').innerHTML = spkList.map(s => {
+        const name = s.display_name || s.speaker_id;
+        const initial = name.charAt(0).toUpperCase();
+        const requiresAttention = s.attention_level !== 'normal' || s.violence_count > 0;
+        const avatarBg = requiresAttention ? 'var(--amber-bg)' : 'var(--blue-bg)';
+        const avatarColor = requiresAttention ? 'var(--amber)' : 'var(--blue)';
+        const observation = observationPill(s);
+        return `
+          <div class="speaker-item">
+            <div class="speaker-avatar" style="background:${avatarBg};color:${avatarColor}">${esc(initial)}</div>
+            <div>
+              <div class="speaker-name">${esc(name)}</div>
+              <div class="speaker-count">${s.event_count} 条事件 · 风险 ${s.violence_count || 0} 起${s.relationship ? ` · ${esc(s.relationship)}` : ''}</div>
+              <div class="speaker-meta">
+                <span class="pill ${s.attention_level === 'priority' ? 'bad' : s.attention_level === 'watch' ? 'warn' : 'muted-pill'}" style="font-size:11px">${attentionText(s.attention_level)}</span>
+                <span class="pill ${observation[0]}" style="font-size:11px">${observation[1]}</span>
+                ${s.false_positives ? `<span class="pill muted-pill" style="font-size:11px">误报 ${s.false_positives}</span>` : ''}
+                ${s.false_negatives ? `<span class="pill muted-pill" style="font-size:11px">漏报 ${s.false_negatives}</span>` : ''}
+              </div>
+            </div>
+            <button class="btn-mini" data-speaker="${esc(s.speaker_id)}" onclick="openSpeakerProfile(this.dataset.speaker)">查看</button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function switchSpeakerTab(tab) {
+      state.speakerFilter = tab;
+      ['all', 'known'].forEach(t => $(`st${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.toggle('active', t === tab));
+      renderSpeakers();
+    }
+
+    async function openSpeakerProfile(speakerId) {
+      try {
+        const data = await fetchJson(`/api/speakers/${encodeURIComponent(speakerId)}/profile`);
+        renderSpeakerProfile(data.profile);
+        $('speakerProfileDialog').showModal();
+      } catch (e) {
+        showToast(`画像读取失败：${e.message}`);
+      }
+    }
+
+    function newSpeakerProfile() {
+      state.activeSpeakerId = null;
+      state.activeSpeakerProfile = null;
+      $('speakerProfileTitle').textContent = '新增人员档案';
+      $('speakerProfileSub').textContent = '人工录入';
+      $('speakerContentNotice').textContent = '人员画像根据已记录的说话内容形成观察摘要，不读取声纹模板，也不构成心理诊断。';
+      $('speakerMetrics').innerHTML = [
+        ['关联事件', 0], ['风险事件', 0], ['干预', 0], ['声学预警', 0]
+      ].map(([label, value]) => `<div class="profile-metric"><div class="profile-metric-label">${label}</div><div class="profile-metric-value">${value}</div></div>`).join('');
+      $('speakerObservationSummary').textContent = '保存档案并关联到说话内容后，可形成多维观察。';
+      $('speakerDimensions').innerHTML = '<div class="panel-note">尚无内容样本</div>';
+      $('speakerEvidence').innerHTML = '<div class="panel-note">尚无信号证据</div>';
+      $('speakerRecentEvents').innerHTML = '<div class="panel-note">尚无说话内容</div>';
+      $('screeningSummary').textContent = '请先保存档案，再由本人自愿填写量表。';
+      $('speakerRecordId').value = '';
+      $('speakerDisplayName').value = '';
+      $('speakerRelationship').value = '';
+      $('speakerAttention').value = 'normal';
+      $('speakerNotes').value = '';
+      $('btnPhqScreen').disabled = true;
+      $('btnGadScreen').disabled = true;
+      $('btnClearScreenings').disabled = true;
+      $('speakerProfileDialog').showModal();
+    }
+
+    function renderSpeakerProfile(profile) {
+      state.activeSpeakerId = profile.speaker_id;
+      state.activeSpeakerProfile = profile;
+      $('speakerRecordId').value = profile.speaker_id;
+      $('speakerProfileTitle').textContent = profile.display_name || '人员画像';
+      $('speakerProfileSub').textContent = profile.relationship || (profile.source === 'manual' ? '人工档案' : '事件标签');
+      const content = profile.content_observation || {};
+      $('speakerContentNotice').textContent = content.notice || profile.content_notice || '内容观察不构成心理诊断。';
+      $('speakerDisplayName').value = profile.display_name || '';
+      $('speakerRelationship').value = profile.relationship || '';
+      $('speakerAttention').value = profile.attention_level || 'normal';
+      $('speakerNotes').value = profile.notes || '';
+      const screeningAllowed = !voiceprintProhibited(profile.speaker_id);
+      $('btnPhqScreen').disabled = !screeningAllowed;
+      $('btnGadScreen').disabled = !screeningAllowed;
+      const metricValues = [
+        ['关联事件', profile.event_count || 0],
+        ['风险事件', profile.violence_count || 0],
+        ['干预记录', profile.intervention_count || 0],
+        ['声学预警', profile.acoustic_alert_count || 0],
+      ];
+      $('speakerMetrics').innerHTML = metricValues.map(([label, value]) =>
+        `<div class="profile-metric"><div class="profile-metric-label">${label}</div><div class="profile-metric-value">${value}</div></div>`
+      ).join('');
+      const observation = observationPill(profile);
+      $('speakerObservationSummary').innerHTML = `<span class="pill ${observation[0]}" style="margin-right:7px">${observation[1]}</span>${esc(content.summary || '尚无可分析内容')}`;
+      $('speakerDimensions').innerHTML = (content.dimensions || []).length ? content.dimensions.map(item => `
+        <div class="observation-item">
+          <span>${esc(item.name)}</span>
+          <strong class="${item.level === 'high' ? 'text-red' : ''}">${esc(item.value)}</strong>
+          <div class="observation-detail">${esc(item.description)}</div>
+        </div>
+      `).join('') : '<div class="panel-note">尚无内容样本</div>';
+      const evidence = content.evidence || [];
+      $('speakerEvidence').innerHTML = evidence.length ? evidence.map(item => `
+        <div class="profile-event">
+          <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:4px">
+            <span class="pill warn" style="font-size:11px">${esc(item.signal)}</span>
+            <span style="color:var(--muted)">${esc(item.timestamp || '-')}</span>
+          </div>
+          <div>${esc(item.excerpt || '(无转写)')}</div>
+        </div>
+      `).join('') : '<div class="panel-note">尚无需展示的风险或支持性表达证据</div>';
+      const recent = profile.recent_events || [];
+      $('speakerRecentEvents').innerHTML = recent.length ? recent.map(event => `
+        <div class="profile-event">
+          <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:4px">
+            <span class="pill ${event.is_violence ? 'bad' : 'ok'}" style="font-size:11px">${event.is_violence ? '风险' : '正常'}</span>
+            <span style="color:var(--muted)">${esc(event.timestamp || '-')}</span>
+          </div>
+          <div>${esc(event.text || '(无转写)')}</div>
+        </div>
+      `).join('') : '<div class="panel-note">尚无关联事件</div>';
+      renderScreeningSummary(profile.screenings);
+    }
+
+    function renderScreeningSummary(screenings) {
+      const latest = screenings?.latest || {};
+      const results = Object.values(latest);
+      if (!results.length) {
+        $('screeningSummary').textContent = '尚无本人提交的筛查记录。';
+        $('btnClearScreenings').disabled = true;
+        return;
+      }
+      $('btnClearScreenings').disabled = false;
+      $('screeningSummary').innerHTML = results.map(result => `
+        <div class="screening-result">
+          <strong>${esc(result.name)}</strong> ${result.score}/${result.max_score}
+          <span class="pill ${result.level === 'urgent' ? 'bad' : result.level === 'attention' ? 'warn' : result.level === 'watch' ? 'info' : 'ok'}" style="margin-left:5px">${esc(result.severity)}</span>
+          <div>${esc(result.guidance)}</div>
+          <div style="color:var(--muted)">${esc(result.submitted_at)} · 本人自报</div>
+        </div>
+      `).join('');
+    }
+
+    async function loadScreeningInstruments() {
+      if (!state.screeningInstruments) {
+        const data = await fetchJson('/api/screenings/instruments');
+        state.screeningInstruments = Object.fromEntries((data.instruments || []).map(item => [item.id, item]));
+      }
+      return state.screeningInstruments;
+    }
+
+    async function openScreening(instrumentId) {
+      if (!state.activeSpeakerId) return showToast('请先保存人员档案');
+      if (voiceprintProhibited(state.activeSpeakerId)) return showToast('请先创建具名档案，再由本人填写筛查');
+      try {
+        const instruments = await loadScreeningInstruments();
+        const instrument = instruments[instrumentId];
+        if (!instrument) throw new Error('未找到筛查量表');
+        state.activeScreeningInstrument = instrument;
+        $('screeningTitle').textContent = `${instrument.name} 本人自愿筛查`;
+        $('screeningSub').textContent = `${instrument.period} · ${instrument.focus}`;
+        $('screeningQuestions').innerHTML = instrument.questions.map((question, index) => `
+          <label class="screening-question">
+            <span>${index + 1}. ${esc(question)}</span>
+            <select class="select screening-answer" data-index="${index}">
+              ${(instrument.options || []).map(option => `<option value="${option.value}">${esc(option.label)}</option>`).join('')}
+            </select>
+          </label>
+        `).join('');
+        $('screeningConsent').checked = false;
+        $('screeningDialog').showModal();
+      } catch (e) {
+        showToast(`筛查表加载失败：${e.message}`);
+      }
+    }
+
+    async function submitScreening() {
+      const instrument = state.activeScreeningInstrument;
+      if (!instrument || !state.activeSpeakerId) return;
+      if (!$('screeningConsent').checked) return showToast('请由本人确认自愿填写并同意保存结果');
+      const answers = Array.from(document.querySelectorAll('.screening-answer')).map(select => Number(select.value));
+      try {
+        const data = await fetchJson(`/api/speakers/${encodeURIComponent(state.activeSpeakerId)}/screenings`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ instrument: instrument.id, answers, consent: true, self_report: true })
+        });
+        renderSpeakerProfile(data.profile);
+        $('screeningDialog').close();
+        if (data.safety_case) {
+          await fetchSafetyCases(false);
+        }
+        showToast(data.screening.urgent ? '已保存筛查结果：存在需立即关注的安全相关自报' : '本人筛查结果已保存', 4500);
+      } catch (e) {
+        showToast(`筛查提交失败：${e.message}`, 4200);
+      }
+    }
+
+    async function deleteScreeningHistory() {
+      if (!state.activeSpeakerId || !confirm('确认删除此人员在本机保存的全部心理筛查结果？')) return;
+      try {
+        const data = await fetchJson(`/api/speakers/${encodeURIComponent(state.activeSpeakerId)}/screenings`, { method: 'DELETE' });
+        renderSpeakerProfile(data.profile);
+        showToast(data.removed ? '本人筛查结果已从本机删除' : '该档案没有可删除的筛查结果');
+      } catch (e) {
+        showToast(`删除失败：${e.message}`);
+      }
+    }
+
+    function voiceprintProhibited(speakerId) {
+      const id = (speakerId || '').toLowerCase();
+      return !speakerId || ['unknown', '未知', '模拟用户'].includes(id) || speakerId.includes('模拟');
+    }
+
+    async function openVoiceprintManager() {
+      await fetchSpeakers(false);
+      const records = state.speakers.filter(profile => !voiceprintProhibited(profile.speaker_id));
+      $('voiceprintSpeakerSelect').innerHTML = records.length
+        ? records.map(profile => `<option value="${esc(profile.speaker_id)}">${esc(profile.display_name || profile.speaker_id)}</option>`).join('')
+        : '<option value="">请先新建具名档案</option>';
+      $('voiceprintDialog').showModal();
+      await loadVoiceprintSelection();
+    }
+
+    async function loadVoiceprintSelection() {
+      const speakerId = $('voiceprintSpeakerSelect').value;
+      state.activeVoiceprintId = speakerId || null;
+      if (!speakerId) {
+        state.activeVoiceprint = null;
+        renderVoiceprintManager(null);
+        return;
+      }
+      try {
+        const data = await fetchJson(`/api/voiceprints/${encodeURIComponent(speakerId)}`);
+        state.activeVoiceprint = data.voiceprint;
+        renderVoiceprintManager(data.voiceprint);
+      } catch (e) {
+        showToast(`声纹状态读取失败：${e.message}`);
+      }
+    }
+
+    function renderVoiceprintManager(voiceprint) {
+      const enrolled = !!voiceprint?.enrolled;
+      if (!state.activeVoiceprintId) {
+        $('voiceprintStatus').textContent = '请先新建具名档案，再由本人采集声纹样本。';
+      } else if (enrolled) {
+        $('voiceprintStatus').innerHTML = `<span class="pill teal">已注册 ${voiceprint.sample_count} 个样本</span> · 模板仅保存在本机`;
+      } else {
+        $('voiceprintStatus').textContent = '尚未注册声纹；建议在安静环境采集 2 至 3 个样本。';
+      }
+      $('voiceprintConsent').checked = false;
+      $('btnEnrollVoiceprint').disabled = !state.activeVoiceprintId;
+      $('btnTestVoiceprint').disabled = !state.activeVoiceprintId || !enrolled;
+      $('btnDeleteVoiceprint').disabled = !state.activeVoiceprintId || !enrolled;
+    }
+
+    async function refreshVoiceprintSummary() {
+      state.voiceprints = await fetchJson('/api/voiceprints').catch(() => null);
+      renderStatus();
+    }
+
+    async function runVoiceprintCapture(action) {
+      const speakerId = state.activeVoiceprintId;
+      if (!speakerId) return showToast('请先选择具名档案');
+      if (!$('voiceprintConsent').checked) return showToast('请先确认已取得本人知情同意');
+      const button = action === 'enroll' ? $('btnEnrollVoiceprint') : $('btnTestVoiceprint');
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.textContent = action === 'enroll' ? '采集中...' : '识别中...';
+      try {
+        const data = await fetchJson(`/api/voiceprints/${encodeURIComponent(speakerId)}/${action}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ consent: true })
+        });
+        if (action === 'enroll') {
+          state.activeVoiceprint = data.voiceprint;
+          renderVoiceprintManager(data.voiceprint);
+          showToast(`声纹样本已保存（${data.voiceprint.sample_count} / ${data.voiceprint.recommended_samples}）`, 3500);
+        } else {
+          const match = data.match || {};
+          const score = Number(match.score || 0).toFixed(3);
+          showToast(match.matches_profile ? `识别匹配成功，相似度 ${score}` : `未匹配当前档案，相似度 ${score}`, 4000);
+        }
+        await fetchSpeakers(false);
+        await refreshVoiceprintSummary();
+      } catch (e) {
+        showToast(`声纹操作失败：${e.message}`, 4200);
+      } finally {
+        button.textContent = originalText;
+        await loadVoiceprintSelection();
+      }
+    }
+
+    function enrollVoiceprint() {
+      return runVoiceprintCapture('enroll');
+    }
+
+    function testVoiceprint() {
+      return runVoiceprintCapture('test');
+    }
+
+    async function deleteVoiceprint() {
+      const speakerId = state.activeVoiceprintId;
+      if (!speakerId || !confirm('确认删除此人员在本机保存的全部声纹模板？')) return;
+      try {
+        const data = await fetchJson(`/api/voiceprints/${encodeURIComponent(speakerId)}`, { method: 'DELETE' });
+        state.activeVoiceprint = data.voiceprint;
+        renderVoiceprintManager(data.voiceprint);
+        await refreshVoiceprintSummary();
+        showToast(data.removed ? '本机声纹模板已删除' : '该档案没有可删除的声纹模板');
+      } catch (e) {
+        showToast(`删除失败：${e.message}`);
+      }
+    }
+
+    async function saveSpeakerProfile() {
+      const speakerId = $('speakerRecordId').value;
+      const payload = {
+        display_name: $('speakerDisplayName').value.trim(),
+        relationship: $('speakerRelationship').value.trim(),
+        attention_level: $('speakerAttention').value,
+        notes: $('speakerNotes').value.trim(),
+      };
+      if (!payload.display_name) return showToast('请输入档案名称');
+      try {
+        const url = speakerId ? `/api/speakers/${encodeURIComponent(speakerId)}` : '/api/speakers';
+        const method = speakerId ? 'PATCH' : 'POST';
+        const data = await fetchJson(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        renderSpeakerProfile(data.profile);
+        await fetchSpeakers(false);
+        showToast('人员档案已保存');
+      } catch (e) {
+        showToast(`保存失败：${e.message}`);
+      }
+    }
+
+    /* ── Safety Review Workflow ── */
+    function safetyPillClass(status) {
+      return status === 'pending' ? 'bad' : status === 'acknowledged' ? 'warn' : 'ok';
+    }
+
+    function renderSafetyCases() {
+      const data = state.safety;
+      const summary = data?.summary || {};
+      const open = summary.open || 0;
+      $('safetyBadge').textContent = open ? `${open} 项待办` : '无待办';
+      $('safetyBadge').className = `status-pill ${open ? 'bad' : 'ok'}`;
+      const cases = data?.cases || [];
+      if (!cases.length) {
+        $('safetyCaseList').innerHTML = '<div class="empty">暂无需要人工处置的高风险事项</div>';
+        return;
+      }
+      $('safetyCaseList').innerHTML = cases.slice(0, 12).map(item => `
+        <div class="int-item safety-item ${['resolved', 'dismissed'].includes(item.status) ? 'closed' : ''}">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <span class="pill ${safetyPillClass(item.status)}">${esc(displayText('safetyStatus', item.status))}</span>
+            <span style="font-size:11px;color:var(--muted)">${esc(item.timestamp || '-')}</span>
+          </div>
+          <div class="safety-trigger">${esc(item.trigger || '高风险事项')}</div>
+          <div class="int-text">"${esc(item.text || '(事项详情已按隐私要求精简保存)')}"</div>
+          <div style="font-size:11px;color:var(--muted)">说话人 ${esc(displayText('speaker', item.speaker))}${item.scene ? ` · ${esc(displayText('scene', item.scene))}` : ''}</div>
+          ${item.action ? `<div class="int-intervention">${esc(displayText('safetyAction', item.action))}</div>` : ''}
+          <div class="small-actions"><button class="btn-mini" data-case-id="${esc(item.id)}" onclick="openSafetyCase(this.dataset.caseId)">处置记录</button></div>
+        </div>
+      `).join('');
+    }
+
+    async function fetchSafetyCases(showMsg = true) {
+      try {
+        state.safety = await fetchJson('/api/safety/cases?limit=30');
+        renderSafetyCases();
+        if (showMsg) showToast('安全处置事项已刷新');
+      } catch (e) {
+        $('safetyCaseList').innerHTML = `<div class="empty">加载失败：${esc(e.message)}</div>`;
+      }
+    }
+
+    function openSafetyCase(caseId) {
+      const item = (state.safety?.cases || []).find(current => current.id === caseId);
+      if (!item) return showToast('未找到安全处置事项，请刷新后重试');
+      state.activeSafetyCase = item;
+      $('safetyCaseId').value = item.id;
+      $('safetyCaseStatus').value = item.status || 'pending';
+      $('safetyCaseAction').value = item.action || '';
+      $('safetyCaseNote').value = item.note || '';
+      $('safetyCaseSummary').innerHTML = `
+        <div><span class="pill ${safetyPillClass(item.status)}">${esc(displayText('safetyStatus', item.status))}</span> <strong>${esc(item.trigger || '高风险事项')}</strong></div>
+        <div class="voiceprint-detail">${esc(item.timestamp || '-')} · 说话人 ${esc(displayText('speaker', item.speaker))}</div>
+        <div>${esc(item.text || '(事项详情已按隐私要求精简保存)')}</div>
+      `;
+      $('safetyCaseDialog').showModal();
+    }
+
+    async function saveSafetyCase() {
+      const caseId = $('safetyCaseId').value;
+      if (!caseId) return;
+      try {
+        await fetchJson(`/api/safety/cases/${encodeURIComponent(caseId)}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            status: $('safetyCaseStatus').value,
+            action: $('safetyCaseAction').value,
+            note: $('safetyCaseNote').value.trim()
+          })
+        });
+        $('safetyCaseDialog').close();
+        await fetchSafetyCases(false);
+        showToast('安全处置记录已保存');
+      } catch (e) {
+        showToast(`保存处置记录失败：${e.message}`, 4000);
+      }
+    }
+
+    /* ── Fetch: Interventions ── */
+    async function fetchInterventions(showMsg = true) {
+      try {
+        const data = await fetchJson('/api/interventions?limit=30');
+        const interventions = data.interventions || [];
+        if (!interventions.length) {
+          $('intLogList').innerHTML = '<div class="empty">暂无干预记录</div>';
+          return;
+        }
+        $('intLogList').innerHTML = interventions.slice(0, 20).map(e => `
+          <div class="int-item ${esc(e.severity)}">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+              <span class="pill bad">${esc(displayText('severity', e.severity))}</span>
+              <span style="font-size:11px;color:var(--muted)">${esc(e.timestamp || '-')}</span>
+            </div>
+            <div class="int-text">"${esc(e.text || '(无文字)')}"</div>
+            <div style="font-size:11px;color:var(--muted)">情绪 ${esc(displayText('emotionType', e.emotion_type))} · 说话人 ${esc(displayText('speaker', e.speaker))} · ${esc(displayText('scene', e.scene))}</div>
+            ${e.intervention_text ? `<div class="int-intervention">→ ${esc(e.intervention_text)}</div>` : ''}
+          </div>
+        `).join('');
+        if (showMsg) showToast(`干预记录已刷新，共 ${interventions.length} 条`);
+      } catch (e) {
+        $('intLogList').innerHTML = `<div class="empty">加载失败：${esc(e.message)}</div>`;
+      }
+    }
+
+    /* ── Fetch: Trend ── */
+    async function fetchTrend() {
+      try {
+        const days = parseInt($('trendDays').value) || 7;
+        const data = await fetchJson(`/api/stats/trend?days=${days}`);
+        renderTrend(data.labels || [], data.datasets || {});
+      } catch (e) {
+        showToast(`趋势数据加载失败：${e.message}`);
+      }
+    }
+
+    function renderTrend(labels, datasets) {
+      if (state.trendChart) {
+        state.trendChart.data.labels = labels;
+        state.trendChart.data.datasets[0].data = datasets.total || [];
+        state.trendChart.data.datasets[1].data = datasets.violence || [];
+        state.trendChart.data.datasets[2].data = datasets.acoustic || [];
+        state.trendChart.data.datasets[3].data = datasets.intervention || [];
+        state.trendChart.update();
+        return;
+      }
+      const ctx = $('trendChart').getContext('2d');
+      state.trendChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            { label: '总事件', data: datasets.total || [], borderColor: '#1d4ed8', backgroundColor: 'rgba(29,78,216,0.1)', tension: 0.4, fill: true },
+            { label: '暴力', data: datasets.violence || [], borderColor: '#b42318', backgroundColor: 'rgba(180,35,24,0.1)', tension: 0.4, fill: false },
+            { label: '声学', data: datasets.acoustic || [], borderColor: '#b7791f', backgroundColor: 'rgba(183,121,31,0.1)', tension: 0.4, fill: false },
+            { label: '干预', data: datasets.intervention || [], borderColor: '#0f766e', backgroundColor: 'rgba(15,118,110,0.1)', tension: 0.4, fill: false }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 12 } } } },
+          scales: {
+            x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+            y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } } }
+          }
+        }
+      });
+    }
+
+    /* ── Fetch: Events ── */
+    async function fetchEvents(showMsg = true) {
+      try {
+        const events = await fetchJson('/api/events?limit=200');
+        state.events = events.reverse();
+        renderEvents();
+        if (showMsg) showToast('事件已刷新');
+      } catch (error) {
+        $('eventsList').innerHTML = `<div class="empty">事件读取失败：${esc(error.message)}</div>`;
+      }
+    }
+
+    /* ── Events Filter & Render ── */
+    function setEventFilter(filter) {
+      state.filter = filter;
+      for (const id of ['tabAll', 'tabViolence', 'tabAcoustic', 'tabIntervention']) {
+        $(id).classList.remove('active');
+      }
+      const map = { all: 'tabAll', violence: 'tabViolence', acoustic: 'tabAcoustic', intervention: 'tabIntervention' };
+      if (map[filter]) $(map[filter]).classList.add('active');
+      renderEvents();
+    }
+
+    function renderEvents() {
+      let events = state.events || [];
+      const spk = $('speakerFilter').value;
+      if (spk) events = events.filter(e => e.speaker === spk);
+      if (state.filter === 'violence') events = events.filter(e => e.is_violence);
+      if (state.filter === 'acoustic') events = events.filter(e => (e.acoustic_risk_score || 0) >= 60 || e.volume_spike || e.pitch_jump);
+      if (state.filter === 'intervention') events = events.filter(e => e.intervention_triggered);
+
+      $('eventsCount').textContent = `显示 ${events.length} 条，最近 ${state.events.length} 条已加载`;
+      if (!events.length) {
+        $('eventsList').innerHTML = '<div class="empty">暂无匹配事件</div>';
+        return;
+      }
+      $('eventsList').innerHTML = events.map(e => {
+        const mark = state.marks[String(e.ts)]?.mark;
+        const risk = e.acoustic_risk_score || 0;
+        const cls = e.intervention_triggered ? 'intervention' : e.is_violence ? 'violence' : risk >= 60 ? 'acoustic' : '';
+        const badge = e.is_violence ? `<span class="pill bad">${esc(displayText('violenceType', e.violence_type, '暴力'))}</span>` : `<span class="pill ok">正常</span>`;
+        const acoustic = risk > 0 ? `<span class="pill ${risk >= 60 ? 'warn' : 'muted-pill'}">声学 ${risk}</span>` : '';
+        const intervention = e.intervention_triggered ? `<span class="pill teal">已干预</span>` : '';
+        return `
+          <article class="event-card ${cls}">
+            <div class="event-top">
+              <div>
+                <div class="event-time">${esc(timeText(e))}</div>
+                <div class="event-meta">${badge}${acoustic}${intervention}<span class="pill muted-pill">${esc(displayText('scene', e.scene))}</span></div>
+              </div>
+              <span class="pill ${mark ? 'info' : 'muted-pill'}">${markLabel(mark)}</span>
+            </div>
+            <div class="event-text">${esc(e.text || '(无文字)')}</div>
+            <div class="event-meta">
+              <span class="pill muted-pill">置信度 ${pct(e.violence_confidence)}</span>
+              <span class="pill muted-pill">情绪 ${esc(displayText('emotionType', e.emotion_type))} / ${esc(displayText('emotionIntensity', e.emotion_intensity))}</span>
+              <span class="pill muted-pill">音量 ${esc(displayText('volume', e.volume_level))}</span>
+              <span class="pill muted-pill">说话人 ${esc(displayText('speaker', e.speaker))}</span>
+              ${e.intervention_text ? `<span class="pill info">${esc(e.intervention_text)}</span>` : ''}
+            </div>
+            <div class="event-actions">
+              <button class="btn-mini ${mark === 'confirmed' ? 'marked' : ''}" onclick="markEvent(${Number(e.ts)}, 'confirmed')">确认</button>
+              <button class="btn-mini ${mark === 'false_positive' ? 'marked' : ''}" onclick="markEvent(${Number(e.ts)}, 'false_positive')">误报</button>
+              <button class="btn-mini ${mark === 'doubt' ? 'marked' : ''}" onclick="markEvent(${Number(e.ts)}, 'doubt')">疑似漏报</button>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    /* ── Mark Label ── */
+    function markLabel(mark) {
+      return ({ confirmed: '已确认', false_positive: '误报', doubt: '疑似漏报' })[mark] || '未标记';
+    }
+
+    /* ── Mark Event ── */
+    async function markEvent(ts, mark) {
+      try {
+        await fetchJson('/api/events/mark', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ts, mark }) });
+        state.marks[String(ts)] = { mark };
+        renderEvents();
+        await refreshAll();
+        showToast('反馈已记录');
+      } catch (error) { showToast(`标记失败：${error.message}`); }
+    }
+
+    /* ── Export ── */
+    async function exportEvents() {
+      $('exportResult').textContent = '正在导出…';
+      try {
+        const start = $('exportStart').value;
+        const end = $('exportEnd').value;
+        const url = `/api/events/export?start=${start}&end=${end}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || '导出失败');
+        // 创建下载
+        const blob = new Blob([data.csv_data], { type: 'text/csv;charset=utf-8' });
+        const url2 = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url2;
+        a.download = data.filename;
+        a.click();
+        URL.revokeObjectURL(url2);
+        $('exportResult').textContent = `已导出 ${data.count} 条事件 → ${data.filename}`;
+      } catch (e) {
+        $('exportResult').textContent = `导出失败：${esc(e.message)}`;
+      }
+    }
+
+    /* ── Advanced Config ── */
+    async function openAdvancedDialog() {
+      try {
+        const data = await fetchJson('/api/config/full');
+        $('fullConfigEditor').value = JSON.stringify(data, null, 2);
+        $('advancedDialog').showModal();
+      } catch (e) {
+        showToast(`加载配置失败：${e.message}`);
+      }
+    }
+
+    async function loadFullConfig() {
+      try {
+        const data = await fetchJson('/api/config/full');
+        $('fullConfigEditor').value = JSON.stringify(data, null, 2);
+        showToast('已重载配置');
+      } catch (e) {
+        showToast(`重载失败：${e.message}`);
+      }
+    }
+
+    async function saveFullConfig() {
+      try {
+        const raw = $('fullConfigEditor').value;
+        const data = JSON.parse(raw);
+        await fetchJson('/api/config/full', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        showToast('配置已保存，重启服务生效');
+        document.getElementById('advancedDialog').close();
+      } catch (e) {
+        const msg = e.message.includes('JSON') ? 'JSON 格式错误' : e.message;
+        showToast(`保存失败：${msg}`);
+      }
+    }
+
+    /* ── System Start/Stop ── */
+    async function confirmStop() {
+      if (!confirm('确定要停止检测服务吗？停止后将不再进行语言暴力检测和干预。')) return;
+      await stopSystem();
+    }
+    async function stopSystem() {
+      $('btnStop').disabled = true;
+      try {
+        await fetchJson('/api/stop', { method: 'POST' });
+        showToast('检测服务已停止，正在刷新状态...');
+        // Poll for actual status change (up to 5 seconds)
+        for (let i = 0; i < 10; i++) {
+          await new Promise(r => setTimeout(r, 500));
+          await refreshAll();
+          if (!state.status?.running) break;
+        }
+      } catch (error) {
+        showToast(`停止失败：${error.message}`);
+        $('btnStop').disabled = false;
+      }
+    }
+    async function startSystem() {
+      $('btnStart').disabled = true;
+      try {
+        await fetchJson('/api/start', { method: 'POST' });
+        showToast('检测服务启动中，正在刷新状态...');
+        // Poll for actual status change (up to 10 seconds)
+        for (let i = 0; i < 20; i++) {
+          await new Promise(r => setTimeout(r, 500));
+          await refreshAll();
+          if (state.status?.running) break;
+        }
+      } catch (error) {
+        showToast(`启动失败：${error.message}`);
+        $('btnStart').disabled = false;
+      }
+    }
+
+    /* ── Sensitivity UI ── */
+    function updateSensitivityUI(value) { $('sensitivityValue').textContent = Number(value).toFixed(2); }
+    async function saveConfig(payload) {
+      try {
+        await fetchJson('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        showToast('设置已保存，重启检测后生效');
+        await refreshAll();
+      } catch (error) { showToast(`保存失败：${error.message}`); }
+    }
+
+    async function saveLlmModel(type) {
+      const model = type === 'semantic' ? $('semanticModelSelect').value : $('emotionModelSelect').value;
+      const key = `${type}_llm`;
+      const current = state.status?.config?.llm?.[key] || {};
+      await saveConfig({ llm: { [key]: { provider: current.provider || 'dashscope', model, endpoint: current.endpoint || 'https://dashscope.aliyuncs.com/compatible-mode/v1', api_key: '' } } });
+    }
+
+    /* ── Learning ── */
+    async function triggerLearning() {
+      $('btnAnalyze').disabled = true;
+      try { const data = await fetchJson('/api/learning/analyze', { method: 'POST' }); showToast(data.thresholds_applied ? '学习完成，阈值已更新' : '学习完成，阈值保持不变'); await refreshAll(); }
+      catch (error) { showToast(`学习失败：${error.message}`); }
+      finally { $('btnAnalyze').disabled = false; }
+    }
+
+    function showLearningReport() {
+      const report = state.learning;
+      if (!report?.ok) return showToast('学习报告不可用');
+      const s = report.stats || {}, t = report.thresholds || {};
+      $('reportText').textContent = [
+        '学习引擎报告',
+        `总反馈：${s.total_feedback || 0}`,
+        `误报：${s.false_positives || 0}`,
+        `漏报：${s.false_negatives || 0}`,
+        `确认：${s.confirmed || 0}`,
+        `说话人画像：${report.speaker_count || 0}`,
+        '',
+        '当前阈值',
+        `暴力置信度阈值：${t.violence_confidence_min ?? '-'}`,
+        `声学风险阈值：${t.acoustic_risk_min ?? '-'}`,
+        `情绪分阈值：${t.emotion_score_min ?? '-'}`,
+        `吼叫音量 RMS 阈值：${t.volume_rms_shouting ?? '-'}`,
+        `最后更新时间：${t.last_updated ?? '-'}`
+      ].join('\n');
+      $('reportDialog').showModal();
+    }
+
+    /* ── Settings Tab Switching ── */
+    function switchSettingsTab(tab) {
+      ['Key', 'Llm', 'Asr', 'Tts'].forEach(t => {
+        $(`st${t}`).classList.toggle('active', t.toLowerCase() === tab);
+        $(`panel${t}`).style.display = t.toLowerCase() === tab ? 'block' : 'none';
+      });
+      if (tab === 'key') loadApiKeyStatus();
+      if (tab === 'llm') loadModels();
+      if (tab === 'asr') loadAsrModels();
+      if (tab === 'tts') loadTtsModels();
+    }
+
+    /* ── Get effective API Key ── */
+    function getEffectiveKey() {
+      // 优先使用输入框（用户刚刚填写的），其次从状态回退
+      const inputKey = ($('apiKeyInput') && $('apiKeyInput').value || '').trim();
+      if (inputKey) return inputKey;
+      // state.status 里的 has_dashscope_key 为 true 时说明后端已有 key
+      if (state.status?.config?.has_dashscope_key) return '___use_cached___';
+      return '';
+    }
+
+    /* ── API Key ── */
+    async function loadApiKeyStatus() {
+      try {
+        const data = await fetchJson('/api/status');
+        const cfg = data.config || {};
+        const hasKey = cfg.has_dashscope_key;
+        $('keyStatus') && ($('keyStatus').textContent = hasKey ? '已配置' : '未配置');
+        $('keyStatus') && ($('keyStatus').className = `pill ${hasKey ? 'ok' : 'warn'}`);
+      } catch (e) {}
+    }
+
+    async function saveApiKey() {
+      const key = $('apiKeyInput').value.trim();
+      const region = $('dashscopeRegion').value;
+      if (!key) return showToast('API Key 不能为空');
+      try {
+        await fetchJson('/api/config/key', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ api_key: key, region })
+        });
+        showToast('API Key 已保存，重启服务后生效', 3500);
+        $('keyTestResult').innerHTML = '<span class="pill ok">✓ Key 已保存</span>';
+        // 保存后将 key 填回输入框，供后续标签页直接使用
+        $('apiKeyInput').value = key;
+        await refreshAll();
+      } catch (e) {
+        $('keyTestResult').innerHTML = `<span class="pill bad">失败: ${esc(e.message)}</span>`;
+      }
+    }
+
+    async function saveRegion() {
+      const region = $('dashscopeRegion').value;
+      try {
+        await fetchJson('/api/config/key', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ region, api_key: $('apiKeyInput').value.trim() })
+        });
+        showToast('地域已保存');
+      } catch (e) {
+        showToast(`保存失败: ${e.message}`);
+      }
+    }
+
+    /* ── LLM Models ── */
+    let _cachedModels = null;
+
+    async function loadModels() {
+      const semSel = $('semanticModelSelect');
+      const emoSel = $('emotionModelSelect');
+
+      // 先拿最新状态，确保 state.status 是最新的
+      let curStatus = state.status;
+      try {
+        curStatus = await fetchJson('/api/status');
+        state.status = curStatus;
+      } catch (e) {}
+
+      const semCurrent = curStatus?.config?.llm?.semantic_llm?.model || 'qwen-plus';
+      const emoCurrent = curStatus?.config?.llm?.emotion_llm?.model || 'qwen-turbo';
+
+      try {
+        const data = await fetchJson('/api/models/dashscope');
+        if (!data.ok) {
+          semSel.innerHTML = `<option value="${esc(semCurrent)}">${esc(semCurrent)}（未获取到模型列表，请先保存 API Key）</option>`;
+          emoSel.innerHTML = semSel.innerHTML;
+          return;
+        }
+        _cachedModels = data;
+        const llmModels = data.llm || [];
+
+        const mkOpt = (v, lbl) => `<option value="${esc(v)}"${v === lbl ? ' selected' : ''}>${esc(v)}</option>`;
+        if (llmModels.length) {
+          semSel.innerHTML = llmModels.map(m => mkOpt(m, semCurrent)).join('');
+          emoSel.innerHTML = llmModels.map(m => mkOpt(m, emoCurrent)).join('');
+        } else {
+          semSel.innerHTML = `<option value="${esc(semCurrent)}">${esc(semCurrent)}</option>`;
+          emoSel.innerHTML = `<option value="${esc(emoCurrent)}">${esc(emoCurrent)}</option>`;
+        }
+      } catch (e) {
+        semSel.innerHTML = `<option value="${esc(semCurrent)}">${esc(semCurrent)}（加载失败: ${esc(e.message)}）</option>`;
+        emoSel.innerHTML = `<option value="${esc(emoCurrent)}">${esc(emoCurrent)}</option>`;
+      }
+    }
+
+    async function testLlm() {
+      const semSel = $('semanticModelSelect');
+      const model = semSel.value;
+      $('llmTestResult').innerHTML = '<span class="muted-pill">测试中…</span>';
+      try {
+        const data = await fetchJson('/api/llm/test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            provider: 'dashscope',
+            endpoint: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+            api_key: $('apiKeyInput').value.trim() || (state.status?.config?.has_dashscope_key ? '___use_cached___' : ''),
+            model
+          })
+        });
+        if (data.ok) {
+          const msg = data.test_ok
+            ? `✓ 连接成功 | 模型: ${esc(model)} | 响应: ${esc(data.test_msg)}`
+            : `模型列表 ${data.model_count} 个可用 | 对话测试: ${esc(data.test_msg)}`;
+          $('llmTestResult').innerHTML = `<span class="pill ok">${msg}</span>`;
+          showToast('LLM 连接测试成功');
+        } else {
+          $('llmTestResult').innerHTML = `<span class="pill bad">失败: ${esc(data.error)}</span>`;
+        }
+      } catch (e) {
+        $('llmTestResult').innerHTML = `<span class="pill bad">失败: ${esc(e.message)}</span>`;
+      }
+    }
+
+    async function testEmotion() {
+      const model = $('emotionModelSelect').value;
+      $('llmTestResult').innerHTML = '<span class="muted-pill">测试中…</span>';
+      try {
+        const data = await fetchJson('/api/llm/test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            provider: 'dashscope',
+            endpoint: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+            api_key: $('apiKeyInput').value.trim() || (state.status?.config?.has_dashscope_key ? '___use_cached___' : ''),
+            model
+          })
+        });
+        if (data.ok) {
+          $('llmTestResult').innerHTML = `<span class="pill ok">✓ 情绪模型连接成功 (${data.model_count} 个模型可用)</span>`;
+          showToast('情绪模型测试成功');
+        } else {
+          $('llmTestResult').innerHTML = `<span class="pill bad">失败: ${esc(data.error)}</span>`;
+        }
+      } catch (e) {
+        $('llmTestResult').innerHTML = `<span class="pill bad">失败: ${esc(e.message)}</span>`;
+      }
+    }
+
+    async function saveLlmModels() {
+      const sem = $('semanticModelSelect').value;
+      const emo = $('emotionModelSelect').value;
+      try {
+        await fetchJson('/api/config/llm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            semantic: { provider: 'dashscope', model: sem },
+            emotion: { provider: 'dashscope', model: emo }
+          })
+        });
+        showToast('LLM 模型已保存，重启服务后生效');
+      } catch (e) {
+        showToast(`保存失败: ${e.message}`);
+      }
+    }
+
+    /* ── ASR ── */
+    function renderOptionList(select, options, selectedValue) {
+      if (!options.length) {
+        select.innerHTML = '<option value="">无可用选项</option>';
+        return;
+      }
+      select.innerHTML = options.map(item => {
+        const value = typeof item === 'string' ? item : item.id;
+        const label = typeof item === 'string' ? item : item.label;
+        const selected = value === selectedValue ? ' selected' : '';
+        return `<option value="${esc(value)}"${selected}>${esc(label)}</option>`;
+      }).join('');
+      if (selectedValue && !options.some(item => (typeof item === 'string' ? item : item.id) === selectedValue)) {
+        select.insertAdjacentHTML('afterbegin', `<option value="${esc(selectedValue)}" selected>${esc(selectedValue)}（当前配置）</option>`);
+      }
+    }
+
+    async function loadAsrModels() {
+      const sel = $('asrModelSelect');
+      const key = getEffectiveKey();
+      const current = state.status?.config?.asr_cloud_model || 'paraformer-realtime-v2';
+      if (!key) {
+        sel.innerHTML = '<option value="">请先配置 API Key</option>';
+        return;
+      }
+      try {
+        const data = await fetchJson('/api/asr/test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ api_key: key })
+        });
+        if (data.ok) {
+          renderOptionList(sel, data.asr_options || data.asr_models || [], current);
+        } else {
+          sel.innerHTML = `<option value="">加载失败: ${esc(data.error)}</option>`;
+        }
+      } catch (e) {
+        sel.innerHTML = `<option value="">加载失败: ${esc(e.message)}</option>`;
+      }
+    }
+
+    async function testAsr() {
+      $('asrTestResult').innerHTML = '<span class="muted-pill">测试中…</span>';
+      try {
+        const data = await fetchJson('/api/asr/test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ api_key: getEffectiveKey() })
+        });
+        if (data.ok) {
+          $('asrTestResult').innerHTML = `<span class="pill ok">✓ ASR 连接成功 | ${data.asr_count} 个模型可用</span>`;
+          showToast('ASR 测试成功');
+        } else {
+          $('asrTestResult').innerHTML = `<span class="pill bad">失败: ${esc(data.error)}</span>`;
+        }
+      } catch (e) {
+        $('asrTestResult').innerHTML = `<span class="pill bad">失败: ${esc(e.message)}</span>`;
+      }
+    }
+
+    function onAsrEngineChange() {
+      const engine = $('asrEngineSelect').value;
+      const panel = $('asrModelPanel');
+      panel.style.display = engine === 'ali_asr' ? 'block' : 'none';
+    }
+
+    /* ── TTS ── */
+    const EDGE_TTS_VOICES = [
+      { id: 'zh-CN-XiaoxiaoNeural', label: '晓晓（自然女声）' },
+      { id: 'zh-CN-XiaoyiNeural', label: '晓伊（亲和女声）' },
+      { id: 'zh-CN-YunxiNeural', label: '云希（自然男声）' },
+      { id: 'zh-CN-YunjianNeural', label: '云健（稳重男声）' },
+      { id: 'zh-CN-YunyangNeural', label: '云扬（播音男声）' }
+    ];
+
+    async function loadTtsModels() {
+      if ($('ttsEngineSelect').value === 'edge_tts') {
+        const savedVoice = state.status?.config?.tts_voice;
+        const selectedVoice = EDGE_TTS_VOICES.some(item => item.id === savedVoice) ? savedVoice : 'zh-CN-XiaoxiaoNeural';
+        renderOptionList($('ttsVoiceSelect'), EDGE_TTS_VOICES, selectedVoice);
+        return;
+      }
+      const sel = $('ttsModelSelect');
+      const key = getEffectiveKey();
+      const current = state.status?.config?.tts_model || 'sambert-zhichu-v1';
+      if (!key) {
+        sel.innerHTML = '<option value="">请先配置 API Key</option>';
+        return;
+      }
+      try {
+        const data = await fetchJson('/api/tts/test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ api_key: key })
+        });
+        if (data.ok) {
+          renderOptionList(sel, data.tts_options || data.tts_models || [], current);
+        } else {
+          sel.innerHTML = `<option value="">加载失败: ${esc(data.error)}</option>`;
+        }
+      } catch (e) {
+        sel.innerHTML = `<option value="">加载失败: ${esc(e.message)}</option>`;
+      }
+    }
+
+    async function testTts() {
+      $('ttsTestResult').innerHTML = '<span class="muted-pill">测试中…</span>';
+      try {
+        const data = await fetchJson('/api/tts/test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ api_key: getEffectiveKey() })
+        });
+        if (data.ok) {
+          $('ttsTestResult').innerHTML = `<span class="pill ok">✓ TTS 连接成功 | ${data.tts_count} 个模型可用</span>`;
+          showToast('TTS 测试成功');
+        } else {
+          $('ttsTestResult').innerHTML = `<span class="pill bad">失败: ${esc(data.error)}</span>`;
+        }
+      } catch (e) {
+        $('ttsTestResult').innerHTML = `<span class="pill bad">失败: ${esc(e.message)}</span>`;
+      }
+    }
+
+    function onTtsEngineChange() {
+      const engine = $('ttsEngineSelect').value;
+      $('ttsModelPanel').style.display = 'block';
+      $('ttsSambertModelField').style.display = engine === 'sambert' ? 'block' : 'none';
+      $('ttsEdgeVoiceField').style.display = engine === 'edge_tts' ? 'block' : 'none';
+      $('ttsCloudActions').style.display = engine === 'sambert' ? 'flex' : 'none';
+      loadTtsModels();
+    }
+
+    async function previewTts() {
+      const text = $('ttsTestText').value.trim();
+      if (!text) return showToast('请输入试播文字');
+      $('ttsTestResult').innerHTML = '<span class="muted-pill">播放中，请听音箱…</span>';
+      try {
+        const engine = $('ttsEngineSelect').value;
+        const data = await fetchJson('/api/tts/test/playback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text,
+            engine,
+            model: engine === 'sambert' ? $('ttsModelSelect').value : '',
+            voice: engine === 'edge_tts' ? $('ttsVoiceSelect').value : '',
+            api_key: getEffectiveKey()
+          })
+        });
+        if (data.ok) {
+          $('ttsTestResult').innerHTML = `<span class="pill ok">✓ ${esc(data.message)}</span>`;
+          showToast('试播成功！听到声音了吗？');
+        } else {
+          $('ttsTestResult').innerHTML = `<span class="pill bad">播放失败: ${esc(data.error)}</span>`;
+          showToast(`播放失败: ${data.error}`);
+        }
+      } catch (e) {
+        $('ttsTestResult').innerHTML = `<span class="pill bad">播放失败: ${esc(e.message)}</span>`;
+      }
+    }
+
+    /* ── Save all model configs ── */
+    async function saveAllModels() {
+      try {
+        const ttsEngine = $('ttsEngineSelect').value;
+        const payload = {
+          semantic: {
+            provider: 'dashscope',
+            model: $('semanticModelSelect').value
+          },
+          emotion: {
+            provider: 'dashscope',
+            model: $('emotionModelSelect').value
+          },
+          asr: {
+            engine: $('asrEngineSelect').value,
+            model: $('asrModelSelect').value
+          },
+          tts: {
+            engine: ttsEngine,
+            model: ttsEngine === 'sambert' ? $('ttsModelSelect').value : '',
+            voice: ttsEngine === 'edge_tts' ? $('ttsVoiceSelect').value : $('ttsModelSelect').value
+          }
+        };
+        await fetchJson('/api/config/llm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        showToast('所有模型配置已保存，重启服务后生效', 3500);
+        document.getElementById('settingsDialog').close();
+        await refreshAll();
+      } catch (e) {
+        showToast(`保存失败: ${e.message}`);
+      }
+    }
+
+    /* ── Settings Dialog: hook saveAllModels ── */
+    const _orig_openSettingsDialog = openSettingsDialog;
+    async function openSettingsDialog() {
+      $('settingsDialog').showModal();
+      $('apiKeyInput').value = '';
+      $('dashscopeRegion').value = ($('dashscopeRegion').value) || 'beijing';
+      await loadApiKeyStatus();
+      const cfg = state.status?.config || {};
+      $('semanticModelSelect').value = cfg.llm?.semantic_llm?.model || 'qwen-plus';
+      $('emotionModelSelect').value = cfg.llm?.emotion_llm?.model || 'qwen-turbo';
+      $('asrEngineSelect').value = cfg.asr_engine || 'ali_asr';
+      $('ttsEngineSelect').value = cfg.tts_engine || 'edge_tts';
+      onAsrEngineChange();
+      onTtsEngineChange();
+    }
+
+    function closeSettingsDialog() {
+      $('settingsDialog').close();
+    }
+
+    async function testDashscope() {
+      $('testResult') && ($('testResult').textContent = '测试中…');
+      try {
+        const data = await fetchJson('/api/models/dashscope');
+        const llm = data.llm || [];
+        const asr = data.asr || [];
+        const tts = data.tts || [];
+        const total = (data.all || []).length;
+        $('testResult') && ($('testResult').textContent = `连接成功：${total} 个模型；Qwen ${llm.length} 个，ASR ${asr.length} 个，TTS ${tts.length} 个。`);
+      } catch (error) { $('testResult') && ($('testResult').textContent = `连接失败：${error.message}`); }
+    }
+
+    /* ── Lightweight Intervention Notifications ── */
+    let notifyTimer = null;
+    let lastNotificationTs = null;
+    function dismissNotify() {
+      $('intNotify').classList.remove('show');
+    }
+
+    function showInterventionNotification(data) {
+      const severityColor = { high: 'var(--red)', medium: 'var(--amber)', low: 'var(--blue)' };
+      $('intNotifyTitle').textContent = data.severity === 'high'
+        ? `检测到语言暴力并已干预 (${displayText('severity', data.severity)}，待人工复核)`
+        : `检测到语言暴力并已干预 (${displayText('severity', data.severity)})`;
+      $('intNotifyTitle').style.color = severityColor[data.severity] || 'var(--red)';
+      $('intNotifyText').textContent = `"${data.text || '(无转写)'}"`;
+      $('intNotifyMeta').textContent = `${data.speaker ? '说话人: ' + displayText('speaker', data.speaker) + ' · ' : ''}场景: ${displayText('scene', data.scene)} → "${data.intervention_text || '-'}"`;
+      $('intNotify').classList.add('show');
+      if (notifyTimer) clearTimeout(notifyTimer);
+      notifyTimer = setTimeout(() => $('intNotify').classList.remove('show'), 5000);
+    }
+
+    async function pollInterventionNotifications(initial = false) {
+      try {
+        const data = await fetchJson('/api/interventions?limit=30');
+        const latest = (data.interventions || []).find(item => item.intervention_triggered);
+        if (!latest) return;
+        if (lastNotificationTs === null || initial) {
+          lastNotificationTs = latest.ts;
+          return;
+        }
+        if ((latest.ts || 0) > lastNotificationTs) {
+          lastNotificationTs = latest.ts;
+          showInterventionNotification(latest);
+          await Promise.all([fetchEvents(false), fetchInterventions(false), fetchSafetyCases(false), fetchTrend()]);
+        }
+      } catch (e) {
+        // 定时刷新将继续恢复状态，不用打断当前操作。
+      }
+    }
+
+    async function startNotificationPolling() {
+      await pollInterventionNotifications(true);
+      setInterval(() => pollInterventionNotifications(false), 4000);
+    }
+
+    /* ── Report Tab Switching ── */
+    function switchReportTab() {
+      loadReport();
+    }
+
+    /* ── Load Report ── */
+    async function loadReport() {
+      const rtype = $('reportType').value;
+      const dateInput = $('reportDateInput').value;
+      const container = $('reportContent');
+
+      let url, params = '';
+      if (rtype === 'daily') {
+        url = '/api/reports/daily';
+        if (dateInput) params = '?date=' + encodeURIComponent(dateInput);
+      } else if (rtype === 'weekly') {
+        url = '/api/reports/weekly';
+        if (dateInput) params = '?date=' + encodeURIComponent(dateInput);
+      } else {
+        url = '/api/reports/monthly';
+        if (dateInput) {
+          const [year, month] = dateInput.split('-');
+          params = `?year=${encodeURIComponent(year)}&month=${encodeURIComponent(month)}`;
+        }
+      }
+
+      try {
+        const data = await fetchJson(url + params);
+        if (!data.ok) { container.innerHTML = '<div class="empty">加载失败：' + esc(data.error) + '</div>'; return; }
+        renderReport(data.report, container);
+      } catch (e) {
+        container.innerHTML = '<div class="empty">加载失败：' + esc(e.message) + '</div>';
+      }
+    }
+
+    function renderReport(report, container) {
+      if (!report) { container.innerHTML = '<div class="empty">暂无数据</div>'; return; }
+      const s = report.summary || {};
+      const trend = report.trend_vs_previous || {};
+      const trendIcon = { up: '↑', down: '↓', stable: '→' }[trend.trend] || '';
+      const trendColor = { up: 'var(--red)', down: 'var(--green)', stable: 'var(--muted)' }[trend.trend] || 'var(--muted)';
+      const observations = (report.observations || []).map(item =>
+        `<div style="font-size:12px;line-height:1.5">${esc(item)}</div>`
+      ).join('');
+
+      // 时段条形图
+      const hourly = report.hourly_breakdown || {};
+      const hourlyBars = Object.entries(hourly).sort().map(([h, v]) => {
+        const maxV = Math.max(...Object.values(hourly).map(x => x.total), 1);
+        const barW = Math.round((v.total / maxV) * 100);
+        const vioW = v.violence > 0 ? '<span style="color:var(--red);font-size:11px;margin-left:4px">+' + v.violence + '</span>' : '';
+        return `<div style="display:grid;grid-template-columns:44px 1fr;gap:6px;align-items:center;margin-bottom:4px">
+          <span style="font-size:12px;color:var(--muted)">${h}:00</span>
+          <div style="background:var(--surface-2);border-radius:4px;height:18px;overflow:hidden">
+            <div style="background:var(--blue);height:100%;width:${barW}%;border-radius:4px;display:flex;align-items:center;padding-left:6px">
+              <span style="font-size:11px;color:#fff;font-weight:700">${v.total}</span>${vioW}
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+
+      // 暴力类型
+      const vtRows = Object.entries(report.violence_types || {}).sort((a,b) => b[1]-a[1]).map(([t, c]) =>
+        `<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:6px;background:var(--surface-2);border:1px solid var(--line);font-size:12px;margin:2px">
+          <span>${esc(displayText('violenceType', t))}</span><span style="color:var(--red);font-weight:700">${c}</span>
+        </span>`
+      ).join('');
+
+      // 说话人分析
+      const spkRows = Object.entries(report.speakers || {}).sort((a,b) => b[1].violence - a[1].violence).map(([name, info]) => {
+        const rate = info.events > 0 ? Math.round(info.violence / info.events * 100) : 0;
+        const barColor = rate > 30 ? 'var(--red)' : rate > 10 ? 'var(--amber)' : 'var(--green)';
+        return `<div class="report-speaker-row">
+          <div><div style="font-size:13px;font-weight:700">${esc(info.display_name || displayText('speaker', name))}</div><div style="font-size:11px;color:var(--muted)">内容观察 · 干预 ${info.interventions || 0}</div></div>
+          <div class="report-speaker-bar">
+            <div style="background:${barColor};height:100%;width:${Math.min(rate,100)}%;border-radius:4px"></div>
+          </div>
+          <span class="report-speaker-rate" style="color:${barColor}">${rate}%(${info.violence}/${info.events})</span>
+        </div>`;
+      }).join('');
+
+      // 场景分布
+      const sceneRows = Object.entries(report.scenes || {}).sort((a,b) => b[1]-a[1]).map(([sc, cnt]) =>
+        `<span style="display:inline-block;padding:3px 8px;border-radius:5px;background:var(--surface-2);border:1px solid var(--line);font-size:12px;margin:2px">${esc(displayText('scene', sc))} <b>${cnt}</b></span>`
+      ).join('');
+
+      container.innerHTML = `
+        <div class="report-metrics">
+          <div class="metric" style="padding:10px;min-height:60px">
+            <div style="font-size:11px;color:var(--muted)">总事件</div>
+            <div style="font-size:24px;font-weight:800;margin-top:4px">${s.total_events || 0}</div>
+          </div>
+          <div class="metric" style="padding:10px;min-height:60px">
+            <div style="font-size:11px;color:var(--muted)">暴力事件</div>
+            <div style="font-size:24px;font-weight:800;color:var(--red);margin-top:4px">${s.violence_count || 0}</div>
+          </div>
+          <div class="metric" style="padding:10px;min-height:60px">
+            <div style="font-size:11px;color:var(--muted)">暴力率</div>
+            <div style="font-size:24px;font-weight:800;color:var(--red);margin-top:4px">${s.violence_rate || 0}%</div>
+          </div>
+          <div class="metric" style="padding:10px;min-height:60px">
+            <div style="font-size:11px;color:var(--muted)">干预次数</div>
+            <div style="font-size:24px;font-weight:800;color:var(--teal);margin-top:4px">${s.intervention_count || 0}</div>
+          </div>
+          <div class="metric" style="padding:10px;min-height:60px">
+            <div style="font-size:11px;color:var(--muted)">声学预警</div>
+            <div style="font-size:24px;font-weight:800;color:var(--amber);margin-top:4px">${s.acoustic_alerts || 0}</div>
+          </div>
+          <div class="metric" style="padding:10px;min-height:60px">
+            <div style="font-size:11px;color:var(--muted)">高严重度</div>
+            <div style="font-size:24px;font-weight:800;color:var(--red);margin-top:4px">${s.high_severity_count || 0}</div>
+          </div>
+        </div>
+
+        ${observations ? `<div class="profile-notice" style="margin-bottom:14px">${observations}</div>` : ''}
+
+        <div class="report-columns">
+          <div>
+            <div style="font-size:13px;font-weight:760;margin-bottom:8px;color:var(--text)">📈 趋势对比</div>
+            <div style="background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:10px;font-size:13px">
+              <div>对比周期：<b>${esc(trend.previous_label || '-')}</b>（暴力 <b>${trend.previous_violence || 0}</b> 起）</div>
+              <div style="margin-top:6px">
+                本周期：<b>${s.violence_count || 0}</b> 起
+                <span style="color:${trendColor};font-weight:800;font-size:15px;margin-left:6px">${trendIcon} ${Math.abs(trend.delta || 0)}</span>
+                <span style="font-size:11px;color:${trendColor}">(${trend.change_pct || 0}%)</span>
+              </div>
+            </div>
+            ${(report.high_risk_periods || []).length ? `<div style="margin-top:8px;font-size:12px;color:var(--red)">
+              🔴 高风险时段：${report.high_risk_periods.map(p => '<b>' + p + '</b>').join(' · ')}
+            </div>` : ''}
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:760;margin-bottom:8px">🏷 暴力类型分布</div>
+            <div style="padding:4px">${vtRows || '<span style="color:var(--muted);font-size:12px">暂无数据</span>'}</div>
+          </div>
+        </div>
+
+        <div style="margin-top:14px">
+          <div style="font-size:13px;font-weight:760;margin-bottom:8px">⏰ 时段分布</div>
+          <div style="max-height:160px;overflow-y:auto">${hourlyBars || '<div style="color:var(--muted);font-size:12px">暂无数据</div>'}</div>
+        </div>
+
+        <div class="report-columns" style="margin-top:14px">
+          <div>
+            <div style="font-size:13px;font-weight:760;margin-bottom:4px">人员风险画像</div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:8px">${esc(report.speaker_content_notice || '')}</div>
+            <div>${spkRows || '<div style="color:var(--muted);font-size:12px">暂无数据</div>'}</div>
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:760;margin-bottom:8px">🏠 场景分布</div>
+            <div>${sceneRows || '<div style="color:var(--muted);font-size:12px">暂无数据</div>'}</div>
+          </div>
+        </div>
+
+        <div class="report-footer">
+          生成时间：${esc(report.generated_at_str || '-')} · 周期：${esc(report.period?.start_str || '-')} 至 ${esc(report.period?.end_str || '-')}
+        </div>
+      `;
+    }
+
+    async function saveCurrentReport() {
+      const rtype = $('reportType').value;
+      const dateInput = $('reportDateInput').value;
+      try {
+        const payload = { type: rtype };
+        if (rtype === 'daily' && dateInput) payload.date = dateInput;
+        if (rtype === 'weekly' && dateInput) payload.date = dateInput;
+        if (rtype === 'monthly' && dateInput) {
+          const [year, month] = dateInput.split('-');
+          payload.year = Number(year);
+          payload.month = Number(month);
+        }
+        await fetchJson('/api/reports/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        showToast('报告已保存');
+      } catch (e) { showToast('保存失败：' + e.message); }
+    }
+
+    /* ── Boot ── */
+    refreshAll();
+    setInterval(refreshAll, 15000);
+    startNotificationPolling();
+
+    // 日期输入框默认值（今天）
+    const today = new Date().toISOString().slice(0, 10);
+    $('exportEnd').value = today;
+    $('exportStart').value = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+    $('reportDateInput').value = today;
+  </script>
+</body>
+</html>

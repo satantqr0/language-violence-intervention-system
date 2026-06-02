@@ -1,0 +1,147 @@
+{
+  "system": {
+    "name": "语言暴力干预系统",
+    "version": "1.0.0",
+    "platform": "raspberry_pi_5",
+    "log_level": "INFO"
+  },
+  "audio": {
+    "sample_rate": 16000,
+    "chunk_duration": 0.5,
+    "channels": 1,
+    "input_device": "auto",
+    "save_recordings": false,
+    "save_dir": "audio",
+    "vad_threshold": 0.5,
+    "vad_min_speech_duration": 0.5,
+    "vad_silence_duration": 0.8,
+    "sentence_detection": {
+      "enabled": true,
+      "silence_threshold": 0.8,
+      "max_sentence_length": 10.0
+    }
+  },
+  "asr": {
+    "engine": "ali_asr",
+    "model_size": "base",
+    "language": "zh",
+    "beam_size": 3,
+    "temperature": 0.0,
+    "use_faster_whisper": false,
+    "language_hints": [
+      "auto"
+    ],
+    "fun_asr": {
+      "model": "paraformer-realtime-v2",
+      "sample_rate": 16000
+    }
+  },
+  "emotion": {
+    "high_risk_threshold": 80,
+    "types": [
+      "平静",
+      "愤怒",
+      "焦虑",
+      "悲伤",
+      "压抑",
+      "恐惧",
+      "惊讶",
+      "厌恶"
+    ]
+  },
+  "semantic": {
+    "rule_confidence": 0.8,
+    "llm_threshold": 0.6,
+    "adjustments": {
+      "high": 0.3,
+      "medium": 0.15,
+      "low": 0.0
+    }
+  },
+  "scene": {
+    "default": "夫妻",
+    "scenes": {
+      "家庭": {
+        "sensitivity": 0.6
+      },
+      "夫妻": {
+        "sensitivity": 0.7
+      },
+      "教育": {
+        "sensitivity": 0.5
+      },
+      "儿童保护": {
+        "sensitivity": 0.9
+      },
+      "自定义": {
+        "sensitivity": 0.6
+      }
+    },
+    "sensitivity": 0.6
+  },
+  "voiceprint": {
+    "engine": "ecapa_tdnn",
+    "model": "speechbrain/spkrec-ecapa-voxceleb",
+    "max_speakers": 8,
+    "match_threshold": 0.45,
+    "max_templates_per_speaker": 3,
+    "capture_seconds": 5,
+    "simulation_mode": false
+  },
+  "tts": {
+    "engine": "sambert",
+    "voice": "zhichu",
+    "rate": 1.0,
+    "volume": 1.0
+  },
+  "api": {
+    "dashscope_api_key": "",
+    "dashscope_region": "guangzhou",
+    "semantic_llm": {
+      "provider": "dashscope",
+      "model": "qwen-plus",
+      "endpoint": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+      "api_key": ""
+    },
+    "emotion_llm": {
+      "provider": "dashscope",
+      "model": "qwen-turbo",
+      "endpoint": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+      "api_key": ""
+    },
+    "asr": {
+      "provider": "dashscope",
+      "model": "paraformer-realtime-v2",
+      "endpoint": "https://dashscope.aliyuncs.com/api/v1/services/audio/asr/realtime"
+    },
+    "tts": {
+      "provider": "dashscope",
+      "model": "sambert-zhichu-v1",
+      "voice": "zhichu"
+    }
+  },
+  "max_sentence_duration": 5,
+  "vad": {
+    "threshold": 0.5,
+    "silence_duration": 0.8
+  },
+  "acoustic": {
+    "volume_spike_ratio": 2.5,
+    "pitch_jump_semitones": 6.0,
+    "baseline_window": 30,
+    "min_pitch_hz": 60.0,
+    "max_pitch_hz": 500.0
+  },
+  "media_guard": {
+    "enabled": true,
+    "mode": "balanced",
+    "match_margin": 0.035,
+    "max_media_distance": 0.17,
+    "shouting_bypass_rms": 2500,
+    "calibration_seconds": 5
+  },
+  "learning": {
+    "enabled": true,
+    "apply_thresholds": true
+  }
+}
