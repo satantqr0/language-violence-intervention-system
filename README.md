@@ -87,6 +87,30 @@ VD_AUDIO_OUTPUT_DEVICE=plughw:CARD=Device,DEV=0
 
 播放链路优先级为：显式配置的 `VD_AUDIO_OUTPUT_DEVICE`、系统可用的 PulseAudio/PipeWire 输出、USB/非 HDMI ALSA 播放设备、系统默认播放设备。可使用 `scripts/audio_diagnose.sh` 检查音箱识别、音量、播放后端和测试音输出。
 
+### 可选 ARM 设备
+
+近期版本以 Raspberry Pi 5 8GB 为实机基线完成部署验证，并通过 130 项自动化回归测试。该基线可支撑 Web 控制台、VAD、声学分析、语义规则、声纹模板管理、TTS 干预、事件日志和安全处置流程；启用 DashScope 时，ASR/LLM/TTS 可按配置走云端，端侧主要承担采集、分段、过滤、转写调度和本地记录。
+
+目前尚未对所有 ARM 板卡做同等条件的长期延迟和误报率实测，因此下表按近期测试负载、模型内存占用、I/O 余量、散热和系统生态给出迁移建议。若要稳定运行本地 Whisper base、声纹模型和 Web 控制台，建议从 8GB RAM 起步；4GB 设备更适合云端 ASR 或轻量规则模式。
+
+| 设备 | 主要硬件参数 | 推荐硬件配置 | 适用建议 |
+|------|--------------|--------------|----------|
+| Raspberry Pi 5 | Broadcom BCM2712，4 核 Cortex-A76 2.4GHz；LPDDR4X 1/2/4/8/16GB；USB 3.0、千兆网、PCIe 2.0 x1 | 8GB 或 16GB RAM；官方 27W USB-C 电源；主动散热；microSD A2 或 NVMe HAT；USB 麦克风阵列 + USB 音箱 | 当前实机基线，优先推荐。适合家用样机、教学演示和低成本部署 |
+| Raspberry Pi Compute Module 5 | BCM2712，4 核 Cortex-A76 2.4GHz；2/4/8/16GB LPDDR4-4267 SDRAM with ECC；0/16/32/64GB eMMC 选项；PCIe、USB、HDMI、MIPI 由载板扩展 | 8GB 或 16GB RAM；带 eMMC 的型号；官方或工业载板；独立供电、散热和外壳；外接 USB 声卡/音箱 | 适合产品化、嵌入式外壳、定制接口或长期部署 |
+| Radxa ROCK 5B / 5B+ | Rockchip RK3588；4 核 Cortex-A76 最高 2.4GHz + 4 核 Cortex-A55 最高 1.8GHz；Mali-G610；NPU 最高 6TOPS；最高 16/32GB RAM，NVMe 扩展 | 8GB 起步，推荐 16GB；NVMe SSD；主动散热；稳定 USB-C PD；Debian/Armbian/Radxa OS；USB 麦克风 + 独立 USB 音箱 | CPU 余量高于 Pi 5，适合本地转写、更多并发和更大日志量；需要额外验证音频设备和系统镜像稳定性 |
+| Orange Pi 5 Plus | Rockchip RK3588；4 核 Cortex-A76 + 4 核 Cortex-A55；Mali-G610；NPU 最高 6TOPS；4/8/16/32GB RAM；eMMC/NVMe、双 2.5G 网口等接口 | 8GB 起步，推荐 16GB 或 32GB；NVMe 或 eMMC；主动散热；官方 Debian/Ubuntu 镜像；外接 USB 音频设备 | 性价比和接口丰富，适合边缘网关或多设备联网场景；系统生态和外设兼容性需实机复测 |
+| NVIDIA Jetson Orin Nano 8GB | 6 核 Arm Cortex-A78AE；8GB LPDDR5；Ampere GPU 1024 CUDA 核 + 32 Tensor Core；M.2 NVMe、USB 3.2、千兆网 | Jetson Orin Nano 8GB 开发套件；NVMe SSD；官方电源和风扇；JetPack；USB 麦克风/音箱 | 适合后续接入本地 AI 加速、视觉/多模态或 TensorRT 推理；成本和软件栈复杂度高于普通 SBC |
+| NVIDIA Jetson Nano 4GB | 4 核 Cortex-A57；4GB LPDDR4；Maxwell GPU 128 CUDA 核 | 仅建议轻量规则模式或云端 ASR；关闭本地 Whisper；保留 swap/zram；主动散热 | 不推荐作为完整本地链路主机。可用于低成本实验、TTS/日志/Web 控制台和简单边缘推理 |
+
+通用硬件配置建议：
+
+- **内存**：完整本地链路建议 8GB 起步；多人画像、声纹模板、趋势报告和本地 ASR 同时启用时优先 16GB。
+- **存储**：建议 32GB 以上，长期运行优先 NVMe 或 eMMC；microSD 应选择 A2 等级并定期备份。
+- **散热**：本地 Whisper、声纹模型和连续 VAD 会形成持续负载，所有 A76/RK3588/Jetson 方案均建议主动散热。
+- **供电**：Pi 5 使用 5V/5A USB-C PD；RK3588 板卡按厂商建议使用 USB-C PD 或固定电压电源；Jetson 使用官方 DC 电源。
+- **音频**：统一使用 USB 麦克风阵列或 USB 单麦，发声单元使用独立 USB 音箱/USB 声卡；部署后用 `aplay -l`、`scripts/audio_diagnose.sh` 和 WebUI TTS 试播确认输出链路。
+- **系统**：优先选择 64 位 Debian/Ubuntu 系发行版；部署后运行 `python3 tests/run_all.py` 作为迁移验收基线。
+
 ## 快速安装
 
 ### 1. 系统依赖 (Ubuntu/Debian)
