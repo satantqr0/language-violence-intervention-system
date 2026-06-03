@@ -114,32 +114,33 @@ Expected effects include:
 
 ## Screenshots And Demo
 
-The screenshots below use anonymous demo data only. They do not include real
-household recordings, logs, voiceprint templates, or personal profiles.
+The English visuals below are translated demo visuals based on anonymous demo
+data only. They do not include real household recordings, logs, voiceprint
+templates, or personal profiles.
 
 ### Demo Flow
 
-![Language violence intervention demo flow](docs/assets/screenshots/demo-intervention-flow.png)
+![Language violence intervention demo flow](docs/assets/screenshots/en/demo-intervention-flow-en.png)
 
 ### WebUI Dashboard
 
-![WebUI dashboard](docs/assets/screenshots/webui-dashboard.png)
+![WebUI dashboard](docs/assets/screenshots/en/webui-dashboard-en.png)
 
 ### Speaker Profile And Risk Observation
 
-![Speaker profile and risk observation](docs/assets/screenshots/webui-speaker-profile.png)
+![Speaker profile and risk observation](docs/assets/screenshots/en/webui-speaker-profile-en.png)
 
 ### Voiceprint Management
 
-![Voiceprint management](docs/assets/screenshots/webui-voiceprint-management.png)
+![Voiceprint management](docs/assets/screenshots/en/webui-voiceprint-management-en.png)
 
 ### TV And Song Filtering
 
-![TV and song filtering](docs/assets/screenshots/webui-media-filter.png)
+![TV and song filtering](docs/assets/screenshots/en/webui-media-filter-en.png)
 
 ### Trend Report
 
-![Trend report](docs/assets/screenshots/webui-trend-report.png)
+![Trend report](docs/assets/screenshots/en/webui-trend-report-en.png)
 
 ### Core Capabilities
 
