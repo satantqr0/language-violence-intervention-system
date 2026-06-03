@@ -1,15 +1,62 @@
 # Language Violence Intervention System
 
-Edge speech recognition and hybrid semantic analysis for language-violence
-detection and active intervention.
+# 语言暴力干预系统
+
+A privacy-first edge AI system for verbal abuse detection and gentle
+intervention.
+
+It runs on Raspberry Pi 5, Mac Mini, or a regular x86_64 PC. The system uses
+local speech recognition, acoustic risk analysis, rule-based pre-checks, LLM
+semantic analysis, and a protected Web console to detect high-risk
+communication, trigger non-aggressive reminders, keep local records, and
+support human review.
+
+> This project is not a medical diagnostic tool, legal evidence system, or
+> emergency response substitute. All outputs are assistive signals and must keep
+> room for human judgment.
 
 Language: [Chinese](README.md) | [English](README_EN.md)
+
+Quick links: [Screenshots](#screenshots-and-demo) · [Quick install](#quick-install) · [Raspberry Pi deployment](#raspberry-pi-5-deployment) · [Roadmap](ROADMAP.md) · [License](#license)
+
+## 30-Second Overview
+
+- **What it is**: An edge-side prototype for verbal abuse detection, gentle
+  reminders, and human review.
+- **What it does**: Detects high-risk expression, acoustic anomalies, and trend
+  changes, then can play non-aggressive TTS reminders.
+- **Where it runs**: Raspberry Pi 5, Mac Mini, generic x86_64 PC, with
+  migration guidance for other ARM boards.
+- **Privacy posture**: Raw recordings are not saved by default. Event logs,
+  voiceprint templates, speaker profiles, screening summaries, and safety-case
+  records are stored locally.
+- **Current stage**: `v0.1.0-alpha` prototype. Core WebUI, deployment scripts,
+  voiceprint management, media filtering, and trend reporting are implemented,
+  while real-world false-positive evaluation is still needed.
+
+## Core Highlights
+
+- **Local-first**: Raw audio is not persisted by default, and local Whisper
+  transcription is supported.
+- **Active intervention**: High-risk expression can trigger gentle voice
+  prompts.
+- **Dual detection**: Rule engine for fast pre-checks plus LLM semantic
+  analysis when configured.
+- **Web console**: Events, trends, speaker profiles, voiceprint management,
+  media filtering, and safety-case review.
+- **Raspberry Pi deployment**: Raspberry Pi 5 long-running deployment with
+  systemd service scripts.
+- **Privacy protection**: Logs, voiceprint templates, screening summaries, and
+  safety-case records are stored as local private files.
 
 ## Overview
 
 This project implements a prototype language-violence detection and active
 intervention system designed to run continuously on Raspberry Pi 5. It provides
-a local detection service and a protected Web management console.
+a local detection service and a protected Web management console. The intended
+positioning is a privacy-first family-safety / verbal-abuse detection / edge AI
+prototype, not a household surveillance, control, legal evidence, or mental
+diagnosis tool.
 
 ## Background
 
