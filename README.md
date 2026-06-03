@@ -29,6 +29,34 @@
 - **降低误识别和资源浪费**：提供电视/歌曲声音过滤、VAD 人声检测和中文本地化展示，减少观看电视、播放歌曲或噪声造成的误触发。
 - **保留人工判断空间**：所有检测结果都只是辅助信号，涉及安全风险、心理状态或人员身份时，必须由人工复核，必要时寻求专业支持。
 
+## 使用界面截图与演示效果
+
+以下截图使用匿名演示数据生成，仅用于展示 WebUI 与工作流效果，不包含真实家庭录音、日志、声纹模板或人员资料。
+
+### 演示链路效果图
+
+![语言暴力干预演示链路](docs/assets/screenshots/demo-intervention-flow.png)
+
+### WebUI 控制台
+
+![WebUI 控制台总览](docs/assets/screenshots/webui-dashboard.png)
+
+### 人员画像与风险观察
+
+![人员画像与风险观察](docs/assets/screenshots/webui-speaker-profile.png)
+
+### 声纹管理
+
+![声纹管理](docs/assets/screenshots/webui-voiceprint-management.png)
+
+### 电视与歌曲声音过滤
+
+![电视与歌曲声音过滤](docs/assets/screenshots/webui-media-filter.png)
+
+### 趋势报告
+
+![趋势报告](docs/assets/screenshots/webui-trend-report.png)
+
 ### 核心能力
 
 - 🎤 **端侧 ASR**: 本地 Whisper base 模型离线转写，无需云端

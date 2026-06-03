@@ -65,6 +65,35 @@ Expected effects include:
   signals. Safety, mental state, and identity-related outputs must be reviewed
   by humans, and professional support should be sought when needed.
 
+## Screenshots And Demo
+
+The screenshots below use anonymous demo data only. They do not include real
+household recordings, logs, voiceprint templates, or personal profiles.
+
+### Demo Flow
+
+![Language violence intervention demo flow](docs/assets/screenshots/demo-intervention-flow.png)
+
+### WebUI Dashboard
+
+![WebUI dashboard](docs/assets/screenshots/webui-dashboard.png)
+
+### Speaker Profile And Risk Observation
+
+![Speaker profile and risk observation](docs/assets/screenshots/webui-speaker-profile.png)
+
+### Voiceprint Management
+
+![Voiceprint management](docs/assets/screenshots/webui-voiceprint-management.png)
+
+### TV And Song Filtering
+
+![TV and song filtering](docs/assets/screenshots/webui-media-filter.png)
+
+### Trend Report
+
+![Trend report](docs/assets/screenshots/webui-trend-report.png)
+
 ### Core Capabilities
 
 - **Edge ASR**: Offline local Whisper base transcription.
