@@ -2,6 +2,8 @@
 
 基于端侧语音识别与混合语义分析的语言暴力检测及主动干预系统
 
+语言: [中文](README.md) | [English](README_EN.md)
+
 ## 项目概述
 
 本项目实现了一套可在 Raspberry Pi 5 上持续运行的语言暴力检测与主动干预样机，提供本地检测服务和受保护的 Web 管理控制台。
@@ -300,7 +302,8 @@ language-violence-intervention-system/
 ├── models/                   # 模型存储
 ├── scripts/
 │   ├── setup.sh            # 安装脚本
-│   └── install_whisper.sh   # Whisper 下载
+│   ├── deploy_pi.sh        # 树莓派部署
+│   └── audio_diagnose.sh   # 音频诊断
 └── requirements.txt
 ```
 
