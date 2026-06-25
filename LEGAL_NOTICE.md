@@ -26,6 +26,22 @@ Apache License 2.0 and only for patent claims necessarily infringed by the
 licensed Work or accepted contributions. Patent rights outside that scope are
 not granted by this repository notice.
 
+## Patent Application Status
+
+Technology related to this project is associated with Chinese invention patent
+application `202610669466.3`, titled "端侧语音识别混合语义分析语言暴力检测与主动干预系统".
+The applicant-provided notice states a filing date of 2026-05-15 and a
+preliminary examination qualified notice date of 2026-06-25. The application is
+pending and should not be described as a granted patent unless and until grant
+is officially received.
+
+This public repository is not the patent application file. It does not publish
+the full application, claims, specification drawings, office-action
+correspondence, agency correspondence, private prosecution notes, or
+unpublished implementation materials. See `PATENT_NOTICE.md` and
+`OPEN_SOURCE_PATENT_REVIEW.md` before publishing substantial new technical
+content or accepting contributions that may disclose unfiled inventions.
+
 ## Safety And Privacy
 
 The software is not a medical device, diagnostic tool, legal evidence system,

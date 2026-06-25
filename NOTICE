@@ -15,12 +15,18 @@ trademarks, service marks, or product names except as required for reasonable
 and customary attribution.
 
 Patent notice:
+Technology related to this project is associated with Chinese invention patent
+application 202610669466.3, filed on 2026-05-15. The application is pending and
+has not been granted as of this NOTICE update.
+
 The Apache License 2.0 includes the patent grant and patent-termination terms
 stated in Section 3 of the License. No patent rights are granted beyond the
 scope stated in the Apache License 2.0. Hardware designs, unpublished
 implementations, deployment data, voiceprint templates, recordings, logs,
 speaker profiles, screening records, trademarks, and service marks are not
 licensed by this NOTICE file.
+
+For publication and contribution boundaries, see PATENT_NOTICE.md.
 
 Safety notice:
 This software is not a medical device, diagnostic tool, legal evidence system,

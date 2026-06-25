@@ -17,7 +17,29 @@ support human review.
 
 Language: [Chinese](README.md) | [English](README_EN.md)
 
-Quick links: [Screenshots](#screenshots-and-demo) · [Quick install](#quick-install) · [Raspberry Pi deployment](#raspberry-pi-5-deployment) · [Roadmap](ROADMAP.md) · [License](#license)
+Quick links: [Screenshots](#screenshots-and-demo) · [Quick install](#quick-install) · [Raspberry Pi deployment](#raspberry-pi-5-deployment) · [Patent notice](PATENT_NOTICE.md) · [Roadmap](ROADMAP.md) · [License](#license)
+
+## Patent Application Status And Open-Source Boundary
+
+Technology related to this project has been filed as a Chinese invention patent
+application, application number `202610669466.3`, filing date `2026-05-15`.
+The applicant has received a preliminary examination qualified notice dated
+`2026-06-25`. This means the application is still pending and does not mean a
+patent has been granted.
+
+This repository publishes prototype source code, example configuration,
+anonymous demo materials, and deployment documentation. It does not publish the
+full patent application, claims, specification drawings, office-action
+correspondence, or unpublished implementation materials. The Apache License 2.0
+patent license applies only to the Work expressly released in this repository
+and only within the scope stated in Section 3 of that license. It does not
+additionally license unpublished implementations, hardware designs, real data,
+future improvements, or separately filed patents.
+
+Before publishing or contributing new material, review the
+[Open-Source Patent Review Checklist](OPEN_SOURCE_PATENT_REVIEW.md) for
+unfiled invention points, real data, secrets, or patent-prosecution materials.
+See [PATENT_NOTICE.md](PATENT_NOTICE.md) for the full boundary.
 
 ## 30-Second Overview
 
@@ -564,7 +586,8 @@ aplay /tmp/test_tone.wav
 
 This project is released under the Apache License 2.0. Preserve the
 `satantqr0` copyright attribution, project origin, patent notice, and
-disclaimers in `LICENSE` and `NOTICE`.
+disclaimers in `LICENSE`, `NOTICE`, `LEGAL_NOTICE.md`, and
+`PATENT_NOTICE.md`.
 
 Important notes:
 
@@ -579,14 +602,17 @@ Important notes:
   termination terms stated in Section 3. This repository notice does not
   additionally license hardware designs, unpublished implementations,
   deployment data, recordings, voiceprint templates, speaker profiles,
-  screening records, or safety-case records.
+  screening records, safety-case records, future improvements, or separately
+  filed patents.
 - Third-party dependencies, model weights, cloud services, speech services, and
   system software remain subject to their own licenses or service terms. See
   `THIRD_PARTY_NOTICES.md`.
 
-See also `LEGAL_NOTICE.md`: this project is not a medical diagnostic tool,
-legal evidence system, or emergency response substitute. Person identification,
-profiling, and screening require lawful basis and necessary consent.
+See also `LEGAL_NOTICE.md` and `PATENT_NOTICE.md`: this project is not a
+medical diagnostic tool, legal evidence system, or emergency response
+substitute. Person identification, profiling, and screening require lawful
+basis and necessary consent. Patent-related material and new technical schemes
+should be reviewed before public disclosure.
 
 ## References
 

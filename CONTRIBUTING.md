@@ -21,6 +21,22 @@ Please only submit work that you have the right to license. Do not submit:
   mental-health screening results, safety case records, or other personal data.
 - Third-party code or media without compatible licensing and attribution.
 
+## Patent-Sensitive Contributions
+
+Do not publish unfiled invention disclosures in public issues, pull requests,
+discussions, or documentation. Contributions involving new detection
+algorithms, acoustic filters, voiceprint recognition methods, speaker-profile
+logic, active-intervention hardware, deployment topology, evaluation methods,
+or other potentially patentable technical schemes should be submitted only
+after you confirm that public disclosure is intentional and permitted.
+
+If a proposed change contains material that is not meant to be licensed as a
+contribution, mark it clearly as `Not a Contribution` before submission. The
+maintainer may close or postpone public discussion of changes that appear to
+contain unreviewed patent-sensitive material.
+
 For substantial changes, include a short note explaining the technical purpose,
 privacy impact, and whether the change affects audio capture, cloud upload,
 speaker identification, mental-health screening, or safety intervention logic.
+Also state whether you have checked the change against
+`OPEN_SOURCE_PATENT_REVIEW.md`.

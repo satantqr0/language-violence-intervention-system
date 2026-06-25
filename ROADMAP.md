@@ -47,3 +47,8 @@ This roadmap does not change the project positioning. The system is an
 assistive signal for observation, reminders, and human review. It is not a
 medical diagnostic tool, legal evidence system, household surveillance tool, or
 emergency response substitute.
+
+Substantial future work involving new algorithms, acoustic calibration,
+voiceprint methods, speaker-profile logic, active-intervention hardware,
+evaluation protocols, or product deployment should be checked against
+`OPEN_SOURCE_PATENT_REVIEW.md` before public release.
