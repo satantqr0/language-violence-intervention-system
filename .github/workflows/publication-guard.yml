@@ -1,0 +1,17 @@
+name: Publication Guard
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  patent-publication-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Run patent and privacy publication guard
+        run: python3 scripts/patent_publication_guard.py

@@ -45,6 +45,8 @@ blog post, and social post against this list:
   private names, addresses, device identifiers, or family details.
 - Third-party dependencies, models, icons, screenshots, media, and hardware
   descriptions are compatible with their own licenses and terms.
+- `python3 scripts/patent_publication_guard.py` passes locally. The same guard
+  also runs in GitHub Actions for pushes and pull requests.
 
 ## Safe-To-Publish Examples
 
