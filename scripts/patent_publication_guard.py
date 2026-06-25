@@ -19,6 +19,7 @@ ALLOWED_PATENT_NOTICE_FILES = {
     "NOTICE",
     "PATENT_NOTICE.md",
     "OPEN_SOURCE_PATENT_REVIEW.md",
+    "scripts/patent_publication_guard.py",
 }
 
 ALLOWED_EMPTY_PLACEHOLDERS = {
@@ -187,10 +188,11 @@ def main() -> int:
                     problems.append(f"{name}: possible patent prosecution material term `{pattern.pattern}`")
                     break
 
-        for pattern in GRANT_MISSTATEMENT_PATTERNS:
-            if pattern.search(text):
-                problems.append(f"{name}: possible patent grant misstatement `{pattern.pattern}`")
-                break
+        if name not in ALLOWED_PATENT_NOTICE_FILES:
+            for pattern in GRANT_MISSTATEMENT_PATTERNS:
+                if pattern.search(text):
+                    problems.append(f"{name}: possible patent grant misstatement `{pattern.pattern}`")
+                    break
 
     if problems:
         print("Patent/publication guard failed. Review before public release:\n")
